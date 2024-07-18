@@ -6,16 +6,13 @@ use App\Repository\ProductRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: ProductRepository::class)]
+// #[ORM\Entity(repositoryClass: ProductRepository::class)] - à remettre quand repository intégré 
 class Product
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $product_list = null;
 
     #[ORM\Column(length: 255)]
     private ?string $name = null;
@@ -57,19 +54,7 @@ class Product
     {
         return $this->id;
     }
-
-    public function getProductList(): ?string
-    {
-        return $this->product_list;
-    }
-
-    public function setProductList(string $product_list): static
-    {
-        $this->product_list = $product_list;
-
-        return $this;
-    }
-
+ 
     public function getName(): ?string
     {
         return $this->name;

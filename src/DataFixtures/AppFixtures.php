@@ -15,7 +15,6 @@ class AppFixtures extends Fixture
 
         for ($i = 0; $i < 20; $i++) {
             $product = new Product();
-            $product->setProductList($faker->word);
             $product->setName($faker->word);
             $product->setDescription($faker->sentence);
             $product->setBrand($faker->company);
