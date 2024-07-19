@@ -13,12 +13,15 @@ security:
                 class: App\Entity\User
                 property: email
 
+
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
             lazy: true
+
+            provider: users_in_memory
 
 
             # activate different ways to authenticate
