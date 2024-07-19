@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "92adaaaf47d9c9a338f2d32d3d35bf8e",
+    "content-hash": "8620e6c4c9204aac14ec25ef25d6afa1",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -6605,7 +6605,6 @@
         },
         {
             "name": "zircote/swagger-php",
-
             "version": "4.10.5",
             "source": {
                 "type": "git",
@@ -6616,7 +6615,6 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/zircote/swagger-php/zipball/0840dad40fd6759912485f34bfccf13b49b29226",
                 "reference": "0840dad40fd6759912485f34bfccf13b49b29226",
-
                 "shasum": ""
             },
             "require": {
@@ -6682,11 +6680,9 @@
             ],
             "support": {
                 "issues": "https://github.com/zircote/swagger-php/issues",
-
                 "source": "https://github.com/zircote/swagger-php/tree/4.10.5"
             },
             "time": "2024-07-16T03:13:27+00:00"
-
         }
     ],
     "packages-dev": [

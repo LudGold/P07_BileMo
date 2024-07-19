@@ -9,6 +9,7 @@ use Doctrine\Persistence\ManagerRegistry;
 /*
  * @extends ServiceEntityRepository<Products>
  */
+
 class ProductRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -16,6 +17,15 @@ class ProductRepository extends ServiceEntityRepository
         parent::__construct($registry, Product::class);
     }
 
+    public function findallWithPagination($page, $limit)
+    {
+        $qb = $this->createQueryBuilder('b')
+            ->setFirstResult((($page - 1) * $limit))
+            ->setMaxResults($limit);
+
+        return $qb->getQuery()->getResult();
+    }   
+    
     //    /**
     //     * @return Product[] Returns an array of Products objects
     //     */
