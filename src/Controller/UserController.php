@@ -13,18 +13,29 @@ use Symfony\Component\Routing\Annotation\Route;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UserController extends AbstractController
 {
     #[Route('api/customers', name: 'app_customer_list', methods: ['GET'])]
     // récupérer la liste des clients
-    public function getCustomers(CustomerRepository $customerRepository, SerializerInterface $serializer, request $request): JsonResponse
-    {
-        
-        $page = $request->get('page',1);
+    public function getCustomers(
+        CustomerRepository $customerRepository,
+        SerializerInterface $serializer,
+        Request $request,
+        TagAwareCacheInterface $cache
+    ): JsonResponse {
+        $page = $request->get('page', 1);
         $limit = $request->get('limit', 3);
-        $customerList = $customerRepository->findAllWithPagination($page, $limit);
+        $cacheId = 'getCustomers_' . $page . '_limit_' . $limit;
+
+        $customerList = $cache->get($cacheId, function (ItemInterface $item) use ($customerRepository, $page, $limit) {
+            $item->expiresAfter(3600);
+            $item->tag('customerCache');
+            return $customerRepository->findAllWithPagination($page, $limit);
+        });
 
         $context = SerializationContext::create()->setGroups(['customer:read']);
         $jsonCustomerList = $serializer->serialize($customerList, 'json', $context);
@@ -38,14 +49,26 @@ class UserController extends AbstractController
 
     #[Route('api/customers/{id<\d+>}', name: 'app_customer_get', methods: ['GET'])]
     // récupérer un seul client
-    public function getCustomer(int $id, CustomerRepository $customerRepository, SerializerInterface $serializer): JsonResponse
-    {
-        $customer = $customerRepository->find($id);
-        $context = SerializationContext::create()->setGroups(['customer:read']);
+    public function getCustomer(
+        int $id,
+        CustomerRepository $customerRepository,
+        SerializerInterface $serializer,
+        TagAwareCacheInterface $cache
+    ): JsonResponse {
+        $cacheId = 'getCustomer_' . $id;
+
+        $customer = $cache->get($cacheId, function (ItemInterface $item) use ($customerRepository, $id) {
+            echo ('l\'element pas encore en cache');
+            $item->expiresAfter(3600);
+            $item->tag('customerCache');
+            return $customerRepository->find($id);
+        });
+
         if (!$customer) {
             return new JsonResponse(['message' => 'Customer not found'], Response::HTTP_NOT_FOUND);
         }
 
+        $context = SerializationContext::create()->setGroups(['customer:read']);
         $jsonCustomer = $serializer->serialize($customer, 'json', $context);
         return new JsonResponse(
             $jsonCustomer,
@@ -57,17 +80,20 @@ class UserController extends AbstractController
 
     #[Route('api/customers', name: 'app_customer_add', methods: ['POST'])]
     // pour ajouter un nouveau client
-    public function addCustomer(Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager, ValidatorInterface $validator, UserRepository $userRepository): JsonResponse
-    {
-        $customer=$serializer->deserialize($request->getContent(), Customer::class, 'json');
-        $customer->setcreatedAt(date_create_immutable());
-        //user mis en dur avant gestion authentification user
+    public function addCustomer(
+        Request $request,
+        SerializerInterface $serializer,
+        EntityManagerInterface $entityManager,
+        ValidatorInterface $validator,
+        UserRepository $userRepository
+    ): JsonResponse {
+        $customer = $serializer->deserialize($request->getContent(), Customer::class, 'json');
+        $customer->setCreatedAt(new \DateTimeImmutable());
         $user = $userRepository->findOneByEmail('ivory16@wisozk.com');
         $customer->setUser($user);
         $errors = $validator->validate($customer);
         if (count($errors) > 0) {
             $errorsString = (string) $errors;
-
             return new JsonResponse($errorsString, Response::HTTP_BAD_REQUEST);
         }
 
@@ -84,11 +110,16 @@ class UserController extends AbstractController
 
     #[Route('api/customers/{id<\d+>}', name: 'app_customer_delete', methods: ['DELETE'])]
     // pour supprimer un client
-    public function deleteCustomer(int $id, CustomerRepository $customerRepository, EntityManagerInterface $entityManager): JsonResponse
-    {
+    public function deleteCustomer(
+        int $id,
+        CustomerRepository $customerRepository,
+        EntityManagerInterface $entityManager,
+        TagAwareCacheInterface $cache
+    ): JsonResponse {
         $customer = $customerRepository->find($id);
 
         if ($customer) {
+            $cache->invalidateTags(['customerCache']);
             $entityManager->remove($customer);
             $entityManager->flush();
 
