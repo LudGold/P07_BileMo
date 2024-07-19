@@ -4,8 +4,9 @@ namespace App\Entity;
 
 use App\Repository\CustomerRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
 
-// #[ORM\Entity(repositoryClass: CustomerRepository::class)]
+#[ORM\Entity(repositoryClass: CustomerRepository::class)]
 class Customer
 {
     #[ORM\Id]
@@ -22,7 +23,7 @@ class Customer
     #[ORM\Column(length: 255, unique: true)]
     private ?string $email = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $createdAt = null;
 
     #[ORM\Column(length: 20)]

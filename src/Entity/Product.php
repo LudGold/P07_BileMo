@@ -6,7 +6,7 @@ use App\Repository\ProductRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-// #[ORM\Entity(repositoryClass: ProductRepository::class)] - à remettre quand repository intégré 
+#[ORM\Entity(repositoryClass: ProductRepository::class)] 
 class Product
 {
     #[ORM\Id]
