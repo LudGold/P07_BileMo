@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\CustomerRepository;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation\Groups;
 use Doctrine\DBAL\Types\Types;
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
@@ -12,28 +13,39 @@ class Customer
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+
+    #[Groups(['customer:read', 'customer:write'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['customer:read', 'customer:write'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['customer:read', 'customer:write'])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255, unique: true)]
+    #[Groups(['customer:read', 'customer:write'])]
     private ?string $email = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $createdAt = null;
+    #[ORM\Column]
+    #[Groups(['customer:read', 'customer:write'])]
+    private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(length: 20)]
+    #[Groups(['customer:read', 'customer:write'])]
     private ?string $phoneNumber = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['customer:read', 'customer:write'])]
+
     private ?string $address = null;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'customers')]
     #[ORM\JoinColumn(nullable: false)]
+
+    #[Groups(['customer:read'])]
     private ?User $user = null;
 
     public function getId(): ?int
@@ -77,12 +89,16 @@ class Customer
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeInterface $createdAt): static
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+
     {
         $this->createdAt = $createdAt;
 
