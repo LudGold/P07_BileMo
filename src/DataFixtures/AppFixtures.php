@@ -2,6 +2,7 @@
 
 namespace App\DataFixtures;
 
+
 use App\Entity\User;
 use App\Entity\Customer;
 use App\Entity\Product;
@@ -40,7 +41,9 @@ class AppFixtures extends Fixture
                 $customer->setName($faker->lastName);
                 $customer->setFirstName($faker->firstName);
                 $customer->setEmail($faker->email);
+
                 $customer->setCreatedAt(\DateTimeImmutable::createFromMutable($faker->dateTimeThisYear));
+
                 $customer->setPhoneNumber($faker->phoneNumber);
                 $customer->setAddress($faker->address);
                 $customer->setUser($user);
@@ -68,6 +71,8 @@ class AppFixtures extends Fixture
             $manager->persist($product);
         }
 
+
         $manager->flush();
     }
 }
+

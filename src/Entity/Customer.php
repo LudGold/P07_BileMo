@@ -13,6 +13,7 @@ class Customer
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+
     #[Groups(['customer:read', 'customer:write'])]
     private ?int $id = null;
 
@@ -38,14 +39,15 @@ class Customer
 
     #[ORM\Column(length: 255)]
     #[Groups(['customer:read', 'customer:write'])]
+
     private ?string $address = null;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'customers')]
     #[ORM\JoinColumn(nullable: false)]
+
     #[Groups(['customer:read'])]
     private ?User $user = null;
 
-    
     public function getId(): ?int
     {
         return $this->id;
@@ -87,12 +89,16 @@ class Customer
         return $this;
     }
 
+
     public function getCreatedAt(): ?\DateTimeImmutable
+
     {
         return $this->createdAt;
     }
 
+
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
+
     {
         $this->createdAt = $createdAt;
 
