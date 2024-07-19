@@ -3,7 +3,8 @@
 namespace App\Controller;
 
 use App\Repository\ProductRepository;
-use Symfony\Component\Serializer\SerializerInterface;
+
+use JMS\Serializer\SerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
