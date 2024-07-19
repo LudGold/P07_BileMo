@@ -5,7 +5,7 @@ namespace App\Entity;
 use App\Repository\CustomerRepository;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation\Groups;
-use Doctrine\DBAL\Types\Types;
+
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
 class Customer
