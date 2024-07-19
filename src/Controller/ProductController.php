@@ -6,6 +6,7 @@ use App\Repository\ProductRepository;
 
 use JMS\Serializer\SerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -14,9 +15,11 @@ class ProductController extends AbstractController
 {
     #[Route('api/products', name: 'app_product')]
     //pour récuperer la liste des produits
-    public function getCollection(ProductRepository $productRepository, SerializerInterface $serializer): JsonResponse
+    public function getCollection(ProductRepository $productRepository, SerializerInterface $serializer, request $request): JsonResponse
     {
-        $productList = $productRepository->findAll();
+        $page = $request->get('page',1);
+        $limit = $request->get('limit', 3);
+        $productList = $productRepository->findallWithPagination($page, $limit);
 
         $jsonProductList = $serializer->serialize($productList, 'json');
         return new JsonResponse(

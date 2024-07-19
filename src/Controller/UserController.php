@@ -19,9 +19,13 @@ class UserController extends AbstractController
 {
     #[Route('api/customers', name: 'app_customer_list', methods: ['GET'])]
     // récupérer la liste des clients
-    public function getCustomers(CustomerRepository $customerRepository, SerializerInterface $serializer): JsonResponse
+    public function getCustomers(CustomerRepository $customerRepository, SerializerInterface $serializer, request $request): JsonResponse
     {
-        $customerList = $customerRepository->findAll();
+        
+        $page = $request->get('page',1);
+        $limit = $request->get('limit', 3);
+        $customerList = $customerRepository->findAllWithPagination($page, $limit);
+
         $context = SerializationContext::create()->setGroups(['customer:read']);
         $jsonCustomerList = $serializer->serialize($customerList, 'json', $context);
         return new JsonResponse(

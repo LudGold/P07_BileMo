@@ -15,7 +15,15 @@ class CustomerRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Customer::class);
     }
+    
+    public function findallWithPagination($page, $limit)
+    {
+        $qb = $this->createQueryBuilder('b')
+            ->setFirstResult((($page - 1) * $limit))
+            ->setMaxResults($limit);
 
+        return $qb->getQuery()->getResult();
+    }
     //    /**
     //     * @return Customer[] Returns an array of Customer objects
     //     */
