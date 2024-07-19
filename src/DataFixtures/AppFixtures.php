@@ -2,6 +2,7 @@
 
 namespace App\DataFixtures;
 
+
 use App\Entity\User;
 use App\Entity\Customer;
 use App\Entity\Product;
@@ -67,6 +68,7 @@ class AppFixtures extends Fixture
 
             $manager->persist($product);
         }
+
 
         $manager->flush();
     }
