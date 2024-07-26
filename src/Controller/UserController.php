@@ -16,11 +16,14 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class UserController extends AbstractController
 {
     #[Route('api/customers', name: 'app_customer_list', methods: ['GET'])]
-    // récupérer la liste des clients
+    #[IsGranted('ROLE_USER')]
     public function getCustomers(
         CustomerRepository $customerRepository,
         SerializerInterface $serializer,
@@ -47,8 +50,8 @@ class UserController extends AbstractController
         );
     }
 
-    #[Route('api/customers/{id<\d+>}', name: 'app_customer_get', methods: ['GET'])]
-    // récupérer un seul client
+    #[Route('api/customers/{id}', name: 'app_customer_get', methods: ['GET'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_USER')]
     public function getCustomer(
         int $id,
         CustomerRepository $customerRepository,
@@ -58,14 +61,13 @@ class UserController extends AbstractController
         $cacheId = 'getCustomer_' . $id;
 
         $customer = $cache->get($cacheId, function (ItemInterface $item) use ($customerRepository, $id) {
-            echo ('l\'element pas encore en cache');
             $item->expiresAfter(3600);
             $item->tag('customerCache');
             return $customerRepository->find($id);
         });
 
         if (!$customer) {
-            return new JsonResponse(['message' => 'Customer not found'], Response::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('Customer not found');
         }
 
         $context = SerializationContext::create()->setGroups(['customer:read']);
@@ -79,22 +81,25 @@ class UserController extends AbstractController
     }
 
     #[Route('api/customers', name: 'app_customer_add', methods: ['POST'])]
-    // pour ajouter un nouveau client
+    #[IsGranted('ROLE_USER')]
     public function addCustomer(
         Request $request,
         SerializerInterface $serializer,
         EntityManagerInterface $entityManager,
-        ValidatorInterface $validator,
-        UserRepository $userRepository
+        ValidatorInterface $validator
     ): JsonResponse {
         $customer = $serializer->deserialize($request->getContent(), Customer::class, 'json');
         $customer->setCreatedAt(new \DateTimeImmutable());
-        $user = $userRepository->findOneByEmail('ivory16@wisozk.com');
+
+        $user = $this->getUser(); // Obtenir l'utilisateur actuellement authentifié
+        if (!$user) {
+            throw new BadRequestHttpException('User not authenticated');
+        }
         $customer->setUser($user);
+
         $errors = $validator->validate($customer);
         if (count($errors) > 0) {
-            $errorsString = (string) $errors;
-            return new JsonResponse($errorsString, Response::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException((string) $errors);
         }
 
         $entityManager->persist($customer);
@@ -108,8 +113,8 @@ class UserController extends AbstractController
         );
     }
 
-    #[Route('api/customers/{id<\d+>}', name: 'app_customer_delete', methods: ['DELETE'])]
-    // pour supprimer un client
+    #[Route('api/customers/{id}', name: 'app_customer_delete', methods: ['DELETE'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_USER')]
     public function deleteCustomer(
         int $id,
         CustomerRepository $customerRepository,
@@ -118,14 +123,15 @@ class UserController extends AbstractController
     ): JsonResponse {
         $customer = $customerRepository->find($id);
 
-        if ($customer) {
-            $cache->invalidateTags(['customerCache']);
-            $entityManager->remove($customer);
-            $entityManager->flush();
-
-            return new JsonResponse(['message' => 'Customer deleted'], Response::HTTP_OK);
+        if (!$customer) {
+            throw new NotFoundHttpException('Customer not found');
         }
 
-        return new JsonResponse(['message' => 'Customer not found'], Response::HTTP_NOT_FOUND);
+        $cache->invalidateTags(['customerCache']);
+        $entityManager->remove($customer);
+        $entityManager->flush();
+
+        return new JsonResponse(['message' => 'Customer deleted'], Response::HTTP_OK);
     }
 }
+

@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation\Groups;
 
 
+
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
 class Customer
 {
