@@ -32,7 +32,8 @@
         "symfony/serializer": "7.1.*",
         "symfony/validator": "7.1.*",
         "symfony/yaml": "7.1.*",
-        "willdurand/hateoas": "^3.10"
+        "willdurand/hateoas": "^3.10",
+        "willdurand/hateoas-bundle": "^2.6"
     },
     "require-dev": {
         "symfony/maker-bundle": "^1.60"

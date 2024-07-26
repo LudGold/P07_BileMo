@@ -3,9 +3,19 @@
 namespace App\Entity;
 
 use App\Repository\ProductRepository;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Hateoas\Configuration\Annotation as Hateoas;
 
+/**
+ * @Hateoas\Relation(
+ *      "self",
+ *      href = @Hateoas\Route(
+ *          "app_one_product",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups={"getCollection"})
+ * )
+ */
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 class Product
 {
@@ -23,7 +33,7 @@ class Product
     #[ORM\Column(length: 255)]
     private ?string $brand = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 2, scale: 2)]
+    #[ORM\Column(type: 'decimal', precision: 2, scale: 2)]
     private ?string $model = null;
 
     #[ORM\Column]
@@ -32,7 +42,7 @@ class Product
     #[ORM\Column]
     private ?int $stock = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $dateAdded = null;
 
     #[ORM\Column(nullable: true)]
@@ -48,13 +58,13 @@ class Product
     private ?array $availableColors = null;
 
     #[ORM\Column(length: 50, nullable: true)]
-    private ?string $State = null;
+    private ?string $state = null;
 
     public function getId(): ?int
     {
         return $this->id;
     }
- 
+
     public function getName(): ?string
     {
         return $this->name;
@@ -189,15 +199,13 @@ class Product
 
     public function getState(): ?string
     {
-        return $this->State;
+        return $this->state;
     }
 
-    public function setState(?string $State): static
+    public function setState(?string $state): static
     {
-        $this->State = $State;
+        $this->state = $state;
 
         return $this;
     }
-
 }
-

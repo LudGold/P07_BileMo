@@ -20,8 +20,7 @@ class ProductRepository extends ServiceEntityRepository
     public function findallWithPagination($page, $limit)
     {
         $qb = $this->createQueryBuilder('b')
-            ->leftJoin('b.user', 'u')
-            ->addSelect('u') // Fetch the related user entity eagerly
+
             ->setFirstResult((($page - 1) * $limit))
             ->setMaxResults($limit);
 
