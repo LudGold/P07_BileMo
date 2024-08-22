@@ -4,8 +4,10 @@ security:
             entity:
                 class: App\Entity\User
                 property: email
+
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
@@ -18,21 +20,23 @@ security:
                 check_path: /api/login_check
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
-        
+
         api:
-            pattern: ^/api
+            pattern: ^/api(?!/doc)
             stateless: true
-            # custom_authenticator: App\Security\JWTAuthenticator
             jwt: ~ 
 
         main:
             lazy: true
             provider: app_user_provider
             custom_authenticator: App\Security\JWTAuthenticator
+            form_login: ~
             logout:
                 path: app_logout
                 invalidate_session: true
 
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/login_check, roles: PUBLIC_ACCESS }
+        - { path: ^/api/doc, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }

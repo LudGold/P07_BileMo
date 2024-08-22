@@ -4,25 +4,26 @@ namespace App\Controller;
 
 use App\Entity\Customer;
 use App\Repository\CustomerRepository;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Contracts\Cache\ItemInterface;
-use Symfony\Contracts\Cache\TagAwareCacheInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 class UserController extends AbstractController
 {
-    #[Route('api/customers', name: 'app_customer_list', methods: ['GET'])]
+    #[Route('/api/customers', name: 'get_customers', methods: ['GET'])]
+    #[Groups("customer:read", "user:read")]
     #[IsGranted('ROLE_USER')]
     public function getCustomers(
         CustomerRepository $customerRepository,
@@ -30,18 +31,21 @@ class UserController extends AbstractController
         Request $request,
         TagAwareCacheInterface $cache
     ): JsonResponse {
+
         $page = $request->get('page', 1);
-        $limit = $request->get('limit', 3);
+        $limit = $request->get('limit', 6);
         $cacheId = 'getCustomers_' . $page . '_limit_' . $limit;
 
         $customerList = $cache->get($cacheId, function (ItemInterface $item) use ($customerRepository, $page, $limit) {
             $item->expiresAfter(3600);
             $item->tag('customerCache');
+
             return $customerRepository->findAllWithPagination($page, $limit);
         });
 
         $context = SerializationContext::create()->setGroups(['customer:read']);
         $jsonCustomerList = $serializer->serialize($customerList, 'json', $context);
+
         return new JsonResponse(
             $jsonCustomerList,
             Response::HTTP_OK,
@@ -50,7 +54,7 @@ class UserController extends AbstractController
         );
     }
 
-    #[Route('api/customers/{id}', name: 'app_customer_get', methods: ['GET'], requirements: ['id' => '\d+'])]
+    #[Route('/api/customers/{id}', name: 'get_customer', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
     public function getCustomer(
         int $id,
@@ -63,6 +67,7 @@ class UserController extends AbstractController
         $customer = $cache->get($cacheId, function (ItemInterface $item) use ($customerRepository, $id) {
             $item->expiresAfter(3600);
             $item->tag('customerCache');
+
             return $customerRepository->find($id);
         });
 
@@ -71,7 +76,13 @@ class UserController extends AbstractController
         }
 
         $context = SerializationContext::create()->setGroups(['customer:read']);
-        $jsonCustomer = $serializer->serialize($customer, 'json', $context);
+
+        
+        $data = $serializer->serialize($customer, 'json', $context);
+        $data['user']['id'] = $customer->getUser()->getId();
+    
+        $jsonCustomer = $serializer->serialize($data, 'json');
+
         return new JsonResponse(
             $jsonCustomer,
             Response::HTTP_OK,
@@ -80,7 +91,7 @@ class UserController extends AbstractController
         );
     }
 
-    #[Route('api/customers', name: 'app_customer_add', methods: ['POST'])]
+    #[Route('/api/customers', name: 'add_customer', methods: ['POST'])]
     #[IsGranted('ROLE_USER')]
     public function addCustomer(
         Request $request,
@@ -96,7 +107,7 @@ class UserController extends AbstractController
             throw new BadRequestHttpException('User not authenticated');
         }
         $customer->setUser($user);
-
+        dd($customer);
         $errors = $validator->validate($customer);
         if (count($errors) > 0) {
             throw new BadRequestHttpException((string) $errors);
@@ -113,7 +124,7 @@ class UserController extends AbstractController
         );
     }
 
-    #[Route('api/customers/{id}', name: 'app_customer_delete', methods: ['DELETE'], requirements: ['id' => '\d+'])]
+    #[Route('/api/customers/{id}', name: 'delete_customer', methods: ['DELETE'])]
     #[IsGranted('ROLE_USER')]
     public function deleteCustomer(
         int $id,
@@ -126,12 +137,11 @@ class UserController extends AbstractController
         if (!$customer) {
             throw new NotFoundHttpException('Customer not found');
         }
-
-        $cache->invalidateTags(['customerCache']);
         $entityManager->remove($customer);
         $entityManager->flush();
+
+        $cache->invalidateTags(['customerCache']);
 
         return new JsonResponse(['message' => 'Customer deleted'], Response::HTTP_OK);
     }
 }
-

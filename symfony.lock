@@ -1,4 +1,18 @@
 {
+    "api-platform/core": {
+        "version": "3.3",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "3.3",
+            "ref": "74b45ac570c57eb1fbe56c984091a9ff87e18bab"
+        },
+        "files": [
+            "./config/packages/api_platform.yaml",
+            "./config/routes/api_platform.yaml",
+            "./src/ApiResource/.gitignore"
+        ]
+    },
     "doctrine/annotations": {
         "version": "2.0",
         "recipe": {
@@ -47,6 +61,18 @@
             "./migrations/.gitignore"
         ]
     },
+    "friendsofphp/php-cs-fixer": {
+        "version": "3.60",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "3.0",
+            "ref": "be2103eb4a20942e28a6dd87736669b757132435"
+        },
+        "files": [
+            "./.php-cs-fixer.dist.php"
+        ]
+    },
     "jms/serializer-bundle": {
         "version": "5.4",
         "recipe": {
@@ -75,13 +101,17 @@
         ]
     },
     "nelmio/api-doc-bundle": {
-        "version": "4.28",
+        "version": "4.29",
         "recipe": {
             "repo": "github.com/symfony/recipes-contrib",
             "branch": "main",
             "version": "3.0",
             "ref": "c8e0c38e1a280ab9e37587a8fa32b251d5bc1c94"
-        }
+        },
+        "files": [
+            "./config/packages/nelmio_api_doc.yaml",
+            "./config/routes/nelmio_api_doc.yaml"
+        ]
     },
     "symfony/console": {
         "version": "7.1",
@@ -174,6 +204,19 @@
             "./translations/.gitignore"
         ]
     },
+    "symfony/twig-bundle": {
+        "version": "7.1",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "6.4",
+            "ref": "cab5fd2a13a45c266d45a7d9337e28dee6272877"
+        },
+        "files": [
+            "./config/packages/twig.yaml",
+            "./templates/base.html.twig"
+        ]
+    },
     "symfony/validator": {
         "version": "7.1",
         "recipe": {
@@ -185,6 +228,9 @@
         "files": [
             "./config/packages/validator.yaml"
         ]
+    },
+    "twig/extra-bundle": {
+        "version": "v3.10.0"
     },
     "willdurand/hateoas-bundle": {
         "version": "2.6",

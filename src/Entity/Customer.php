@@ -2,21 +2,55 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use App\Entity\User;
+use Symfony\Component\Serializer\Annotation\SerializedName;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Delete;
 use App\Repository\CustomerRepository;
 use Doctrine\ORM\Mapping as ORM;
-use JMS\Serializer\Annotation\Groups;
-
-
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
+#[ApiResource(
+    operations: [
+        new GetCollection(
+            normalizationContext: ['groups' => ['customer:read']],
+            security: "is_granted('ROLE_USER')"
+        ),
+        new Get(
+            normalizationContext: ['groups' => ['customer:read']],
+            security: "is_granted('ROLE_USER') and object.getUser() == user"
+        ),
+        new Post(
+            normalizationContext: ['groups' => ['customer:read']],
+            denormalizationContext: ['groups' => ['customer:write']],
+            security: "is_granted('ROLE_USER')"
+        ),
+        new Delete(
+            security: "is_granted('ROLE_USER') and object.getUser() == user"
+        )
+    ],
+    order: ['createdAt' => 'DESC'],
+    paginationEnabled: true,
+    paginationItemsPerPage: 6
+)]
 class Customer
 {
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-
-    #[Groups(['customer:read', 'customer:write'])]
+    #[Groups(['customer:read'])]
+    
     private ?int $id = null;
+
+    public function __construct($userId)
+    {
+        $this->user = $userId;
+    }
 
     #[ORM\Column(length: 255)]
     #[Groups(['customer:read', 'customer:write'])]
@@ -31,7 +65,7 @@ class Customer
     private ?string $email = null;
 
     #[ORM\Column]
-    #[Groups(['customer:read', 'customer:write'])]
+    #[Groups(['customer:read','customer:write' ])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(length: 20)]
@@ -40,14 +74,13 @@ class Customer
 
     #[ORM\Column(length: 255)]
     #[Groups(['customer:read', 'customer:write'])]
-
     private ?string $address = null;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'customers')]
     #[ORM\JoinColumn(nullable: false)]
-
-    #[Groups(['customer:read'])]
+    #[Groups(["customer:read"])]
     private ?User $user = null;
+    
 
     public function getId(): ?int
     {
@@ -90,16 +123,12 @@ class Customer
         return $this;
     }
 
-
     public function getCreatedAt(): ?\DateTimeImmutable
-
     {
         return $this->createdAt;
     }
 
-
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
-
     {
         $this->createdAt = $createdAt;
 
@@ -140,5 +169,21 @@ class Customer
         $this->user = $user;
 
         return $this;
+    }
+    #[SerializedName("_links")]
+    #[Groups(["customer:read"])]
+    public function getLinks(): array
+    {
+        return [
+            "self" => [
+                "href" => "/api/customers/" . $this->getId()
+            ],
+            "create" => [
+                "href" => "/api/customers"
+            ],
+            "delete" => [
+                "href" => "/api/customers/" . $this->getId()
+            ]
+        ];
     }
 }
