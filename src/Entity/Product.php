@@ -2,77 +2,67 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Metadata\ApiResource;
-use ApiPlatform\Metadata\GetCollection;
-use ApiPlatform\Metadata\Get;
+
 use App\Repository\ProductRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
-#[ApiResource(
-    operations: [
-        new Get(normalizationContext: ['groups' => ['product:read']]),
-        new GetCollection(normalizationContext: ['groups' => ['product:read']])
-    ],
-    order: ['dateAdded' => 'DESC'],
-    paginationEnabled: true,
-    paginationItemsPerPage: 3
-)]
+
 class Product
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['product:read'])]
+    #[Groups(['getCollection', 'getItem'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['product:read'])]
+    #[Groups(['getCollection', 'getItem'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['product:read'])]
+    #[Groups(['getCollection', 'getItem'])]
     private ?string $description = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['product:read'])]
+    #[Groups(['getCollection', 'getItem'])]
     private ?string $brand = null;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
-    #[Groups(['product:read'])]
+    #[Groups(['getCollection', 'getItem'])]
     private ?string $model = null;
 
     #[ORM\Column]
-    #[Groups(['product:read'])]
+    #[Groups(['getCollection', 'getItem'])]
     private ?int $price = null;
 
     #[ORM\Column]
-    #[Groups(['product:read'])]
+    #[Groups(['getCollection', 'getItem'])]
     private ?int $stock = null;
 
     #[ORM\Column(type: 'datetime')]
-    #[Groups(['product:read'])]
+    #[Groups(['getCollection', 'getItem'])]
     private ?\DateTimeInterface $dateAdded = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['getCollection', 'getItem'])]
     private ?array $technicalSpecs = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['getCollection', 'getItem'])]
     private ?array $images = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['getCollection', 'getItem'])]
     private ?string $category = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['getCollection', 'getItem'])]
     private ?array $availableColors = null;
 
     #[ORM\Column(length: 50, nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['getCollection', 'getItem'])]
     private ?string $state = null;
 
     public function getId(): ?int

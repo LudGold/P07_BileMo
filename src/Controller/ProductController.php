@@ -3,8 +3,6 @@
 namespace App\Controller;
 
 use App\Repository\ProductRepository;
-use JMS\Serializer\SerializerInterface;
-use JMS\Serializer\SerializationContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,6 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class ProductController extends AbstractController
@@ -36,8 +35,7 @@ class ProductController extends AbstractController
 
             return $productRepository->findAllWithPagination($page, $limit);
         });
-        $context = SerializationContext::create()->setGroups(['getCollection']);
-        $jsonProductList = $serializer->serialize($productList, 'json', $context);
+        $jsonProductList = $serializer->serialize($productList, 'json', ['groups' => 'getCollection']);
 
         return new JsonResponse(
             $jsonProductList,
@@ -67,9 +65,7 @@ class ProductController extends AbstractController
             throw new NotFoundHttpException('Product not found');
         }
 
-        $context = SerializationContext::create()->setGroups(['getItem']);
-
-        $jsonProduct = $serializer->serialize($product, 'json', $context);
+        $jsonProduct = $serializer->serialize($product, 'json', ['groups' => 'getItem']);
 
         return new JsonResponse($jsonProduct, Response::HTTP_OK, [], true);
     }

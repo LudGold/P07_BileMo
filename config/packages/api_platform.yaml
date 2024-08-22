@@ -3,7 +3,7 @@ api_platform:
     version: 1.0.0
     formats:
         jsonld: ['application/ld+json']
-    enable_docs: true
+    enable_docs: false
     enable_entrypoint: true
     enable_swagger: true
     enable_swagger_ui: true
