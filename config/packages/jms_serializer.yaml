@@ -1,8 +1,8 @@
 jms_serializer:
-    visitors:
-        xml_serialization:
-            format_output: '%kernel.debug%'
-
+        visitors:
+            xml_serialization:
+                format_output: '%kernel.debug%'
+        
 #    metadata:
 #        auto_detection: false
 #        directories:

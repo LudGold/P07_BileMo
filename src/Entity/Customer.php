@@ -4,19 +4,25 @@ namespace App\Entity;
 
 use App\Repository\CustomerRepository;
 use Doctrine\ORM\Mapping as ORM;
-use JMS\Serializer\Annotation\Groups;
-
-
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
+
 class Customer
 {
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['customer:read'])]
 
-    #[Groups(['customer:read', 'customer:write'])]
     private ?int $id = null;
+
+    public function __construct($userId)
+    {
+        $this->user = $userId;
+        $this->createdAt = new \DateTimeImmutable();
+    }
 
     #[ORM\Column(length: 255)]
     #[Groups(['customer:read', 'customer:write'])]
@@ -40,14 +46,13 @@ class Customer
 
     #[ORM\Column(length: 255)]
     #[Groups(['customer:read', 'customer:write'])]
-
     private ?string $address = null;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'customers')]
     #[ORM\JoinColumn(nullable: false)]
-
-    #[Groups(['customer:read'])]
+    #[Groups(["customer:read"])]
     private ?User $user = null;
+
 
     public function getId(): ?int
     {
@@ -90,16 +95,12 @@ class Customer
         return $this;
     }
 
-
     public function getCreatedAt(): ?\DateTimeImmutable
-
     {
         return $this->createdAt;
     }
 
-
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
-
     {
         $this->createdAt = $createdAt;
 

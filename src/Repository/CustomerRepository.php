@@ -21,7 +21,7 @@ class CustomerRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('c')
             ->leftJoin('c.user', 'u')
             ->addSelect('u') // Fetch the related user entity eagerly
-            ->setFirstResult((($page - 1) * $limit))
+            ->setFirstResult(($page - 1) * $limit)
             ->setMaxResults($limit);
 
         return $qb->getQuery()->getResult();
@@ -49,6 +49,5 @@ class CustomerRepository extends ServiceEntityRepository
         //            ->getOneOrNullResult()
         //        ;
         //    }
-
     }
 }
