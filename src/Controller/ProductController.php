@@ -3,6 +3,9 @@
 namespace App\Controller;
 
 use App\Repository\ProductRepository;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Annotations as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,6 +18,32 @@ use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class ProductController extends AbstractController
 {
+    /**
+ * Cette méthode permet de récupérer l'ensemble des smartphones Bilemo.
+ *
+ * @OA\Response(
+ *     response=200,
+ *     description="Retourne la liste complète des smartphones Bilemo",
+ *     @OA\JsonContent(
+ *        type="array",
+ *        @OA\Items(ref=@Model(type=Product::class, groups={"getCollection"}))
+ *     )
+ * )
+ * @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     description="La page que l'on veut récupérer",
+ *     @OA\Schema(type="integer")
+ * )
+ * @OA\Parameter(
+ *     name="limit",
+ *     in="query",
+ *     description="Le nombre d'éléments que l'on veut récupérer",
+ *     @OA\Schema(type="integer")
+ * )
+ * @OA\Tag(name="Products")
+ * @Security(name="Bearer")
+ */
     #[Route('/api/products', name: 'get_collection', methods: ['GET'])]
     public function getCollection(
         ProductRepository $productRepository,

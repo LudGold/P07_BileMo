@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Entity\Customer;
 use App\Entity\User;
 use App\Repository\CustomerRepository;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -31,21 +30,22 @@ class UserController extends AbstractController
         Request $request,
         TagAwareCacheInterface $cache
     ): JsonResponse {
+         
         $user = $this->getUser();
 
-        if (!$user) {
+        if (!$user instanceof User) {
             throw new NotFoundHttpException('User not authenticated');
         }
 
         $page = $request->get('page', 1);
         $limit = $request->get('limit', 6);
         $cacheId = 'getCustomers_' . $page . 'limit' . $limit;
-
-        $customerList = $cache->get($cacheId, function (ItemInterface $item) use ($customerRepository, $page, $limit) {
+        
+        $customerList = $cache->get($cacheId, function (ItemInterface $item) use ($customerRepository, $user, $page, $limit) {
             $item->expiresAfter(3600);
             $item->tag('customerCache');
 
-            return $customerRepository->findAllWithPagination($page, $limit);
+            return $customerRepository->findAllWithPagination($user, $page, $limit);
         });
 
         $jsonCustomerList = $serializer->serialize($customerList, 'json', ['groups' => 'customer:read', 'collection_operation_name' => true]);
