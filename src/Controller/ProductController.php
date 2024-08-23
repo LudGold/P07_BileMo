@@ -65,7 +65,7 @@ class ProductController extends AbstractController
             throw new NotFoundHttpException('Product not found');
         }
 
-        $jsonProduct = $serializer->serialize($product, 'json', ['groups' => 'getItem']);
+        $jsonProduct = $serializer->serialize($product, 'json', ['groups' => 'getItem','item_operation_name' => true ]);
 
         return new JsonResponse($jsonProduct, Response::HTTP_OK, [], true);
     }

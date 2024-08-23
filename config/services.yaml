@@ -31,3 +31,13 @@ services:
         arguments:
             $jwtManager: '@lexik_jwt_authentication.jwt_manager'
             $userProvider: '@security.user.provider.concrete.app_user_provider'
+    App\Serializer\ProductItemNormalizer:
+        arguments:
+            $normalizer: '@serializer.normalizer.object'
+            $router: '@router'
+        tags: ['serializer.normalizer']
+    App\Serializer\ProductCollectionNormalizer:
+        arguments:
+            $normalizer: '@serializer.normalizer.object'
+            $router: '@router'
+        tags: ['serializer.normalizer']
