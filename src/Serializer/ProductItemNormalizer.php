@@ -26,11 +26,11 @@ class ProductItemNormalizer implements NormalizerInterface
        
         $data = $this->normalizer->normalize($object, $format, $context);
 
-        // Ajout de liens spécifiques pour l'élément
+        // Ajout de liens spécifiques pour le produit
         $data['_links'] = [
             'self' => $this->router->generate('get_item', ['id' => $object->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
             'collection' => $this->router->generate('get_collection', [], UrlGeneratorInterface::ABSOLUTE_URL),
-            // Ajout d'autres liens si nécessaire
+            
         ];
 
         // Ajouter des attributs du produit

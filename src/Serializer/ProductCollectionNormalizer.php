@@ -29,7 +29,7 @@ class ProductCollectionNormalizer implements NormalizerInterface
             $data[] = $this->normalizer->normalize($item, $format, $context);
         }
 
-        // Ajouter des métadonnées de pagination
+        // Pagination
         $data['_meta'] = [
             'total_items' => count($data),
             'limit' => $context['limit'] ?? 10,
