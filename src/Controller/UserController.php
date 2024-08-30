@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Customer;
+use App\Entity\User;
 use App\Repository\CustomerRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,7 +18,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
-use Symfony\Component\Serializer\Annotation\Groups;
+
 
 class UserController extends AbstractController
 {
@@ -30,18 +31,35 @@ class UserController extends AbstractController
         TagAwareCacheInterface $cache
     ): JsonResponse {
 
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            throw new NotFoundHttpException('User not authenticated');
+        }
+
         $page = $request->get('page', 1);
         $limit = $request->get('limit', 6);
-        $cacheId = 'getCustomers_' . $page . '_limit_' . $limit;
+        $cacheId = 'getCustomers_' . $page . 'limit' . $limit;
 
-        $customerList = $cache->get($cacheId, function (ItemInterface $item) use ($customerRepository, $page, $limit) {
+        $customerList = $cache->get($cacheId, function (ItemInterface $item) use ($customerRepository, $user, $page, $limit) {
             $item->expiresAfter(3600);
             $item->tag('customerCache');
 
-            return $customerRepository->findAllWithPagination($page, $limit);
+            return $customerRepository->findAllWithPagination($user, $page, $limit);
         });
+        // Update the context to pass the correct 'collection_operation_name'
+        $context = [
+            'groups' => 'customer:read',
+            'collection_operation_name' => 'get_customers', // Correct context for the normalizer
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total_items' => count($customerList),
+                'total_pages' => ceil(count($customerList) / $limit),
+            ]
+        ];
 
-        $jsonCustomerList = $serializer->serialize($customerList, 'json', ['groups' => 'customer:read']);
+        $jsonCustomerList = $serializer->serialize($customerList, 'json', ['groups' => 'getCollection']);
 
         return new JsonResponse(
             $jsonCustomerList,
@@ -72,7 +90,7 @@ class UserController extends AbstractController
             throw new NotFoundHttpException('Customer not found');
         }
 
-        $jsonCustomer = $serializer->serialize($customer, 'json', ['groups' => 'customer:read']);
+        $jsonCustomer = $serializer->serialize($customer, 'json', ['groups' => 'customer:read', 'item_operation_name' => true]);
 
         return new JsonResponse(
             $jsonCustomer,
@@ -90,31 +108,37 @@ class UserController extends AbstractController
         EntityManagerInterface $entityManager,
         ValidatorInterface $validator
     ): JsonResponse {
-        $customer = $serializer->deserialize($request->getContent(), Customer::class, 'json');
-        $customer->setCreatedAt(new \DateTimeImmutable());
-        $customer->setUser($this->getUser());
-        $user = $this->getUser(); // Obtenir l'utilisateur actuellement authentifié
+        // Vérifier que l'utilisateur est authentifié
+        $user = $this->getUser();
         if (!$user) {
             throw new BadRequestHttpException('User not authenticated');
         }
-            
+
+        // Désérialiser les données reçues en objet Customer
+        $customer = $serializer->deserialize($request->getContent(), Customer::class, 'json');
+
+        // Initialiser les attributs non fournis par le client
+        $customer->setCreatedAt(new \DateTimeImmutable());
+        $customer->setUser($user);
+
+        // Validation de l'entité
         $errors = $validator->validate($customer);
         if (count($errors) > 0) {
-            throw new BadRequestHttpException((string) $errors);
+            return new JsonResponse((string) $errors, Response::HTTP_BAD_REQUEST);
         }
 
+        // Persister et enregistrer le Customer
         $entityManager->persist($customer);
         $entityManager->flush();
 
-        $jsonCustomer = $serializer->serialize($customer, 'json', ['groups' => 'customer:read']);
-
-        return new JsonResponse(
-            $serializer->serialize($jsonCustomer, 'json'),
-            Response::HTTP_CREATED,
-            [],
-            true
-        );
+        // Sérialiser et retourner la réponse
+        $jsonCustomer = $serializer->serialize($customer, 'json', [
+            'groups' => 'customer:read',
+            'item_operation_name' => true // Ajoutez cette clé pour activer le normalizer
+        ]);
+        return new JsonResponse($jsonCustomer, Response::HTTP_CREATED, [], true);
     }
+
 
     #[Route('/api/customers/{id}', name: 'delete_customer', methods: ['DELETE'])]
     #[IsGranted('ROLE_USER')]

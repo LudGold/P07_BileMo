@@ -18,9 +18,8 @@ class Customer
 
     private ?int $id = null;
 
-    public function __construct($userId)
+    public function __construct()
     {
-        $this->user = $userId;
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -52,7 +51,6 @@ class Customer
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(["customer:read"])]
     private ?User $user = null;
-
 
     public function getId(): ?int
     {

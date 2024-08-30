@@ -1,25 +1,53 @@
 nelmio_api_doc:
+    use_validation_groups: true
     documentation:
         info:
             title: BileMo
-            description: This is an awesome app!
+            description: Your gateway to BileMo's luxury smartphone collection !
             version: 1.0.0
         paths:
             /api/login_check:
+            /api/login:
                 post:
-                    operationId: postCredentialsItem
+                    operationId: loginUser
                     tags:
-                        - Token
-                    summary: Permet d'obtenir le token JWT pour se logger.
+                        - Authentication
+                    summary: Login user and obtain JWT token.
+            /api/products:
+                get:
+                    tags: ['Bilemo Premium Phones']
+                    summary: Get all Bilemo smartphones
+            /api/products/{id}:
+                get:
+                    tags: ['Bilemo Premium Phones']
+                    summary: Get a specific product by its ID
+           
+            /api/customers:
+                get:
+                    tags: ['Client Administration']
+                    summary: Retrieve all clients
+                    
+                post:
+                    tags: ['Client Administration']
+                    summary: Add a new customer
+                    
+            /api/customers/{id}:
+                get:
+                    tags: ['Client Administration']
+                    summary: Retrieve a specific client by their ID
+                   
+                delete:
+                    tags: ['Client Administration']
+                    summary: Delete a specific customer by his ID
                     requestBody:
-                        description: Crée un nouveau token JWT
+                        description: Create a new JWT token
                         content:
                             application/json:
                                 schema:
                                     $ref: '#/components/schemas/Credentials'
                     responses:
                         '200':
-                            description: Récupère le token JWT
+                            description: Retrieve the JWT token
                             content:
                                 application/json:
                                     schema:
