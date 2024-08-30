@@ -4,22 +4,27 @@ namespace App\Entity;
 
 
 use App\Repository\ProductRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+
+
+
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 
 class Product
 {
+    // Propriétés communes à toutes les versions
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['getCollection', 'getItem'])]
+    #[Groups(['getCollection', 'getItem', 'getCollectionV2', 'getItemV2'])]
     private ?int $id = null;
 
     
     #[ORM\Column(length: 255)]
-    #[Groups(['getCollection', 'getItem'])]
+    #[Groups(['getCollection', 'getItem', 'getCollectionV2', 'getItemV2'])]
     private ?string $name = null;
 
     
@@ -76,6 +81,17 @@ class Product
     #[ORM\Column(length: 50, nullable: true)]
     #[Groups(['getCollection', 'getItem'])]
     private ?string $state = null;
+
+    // Propriétés spécifiques à la version 2
+    /**
+     * @var string|null
+     * @Groups({"getCollection", "getItem"})
+     * @since 2.0  // Indique la version d'introduction
+     */
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['v2_getCollection', 'v2_getItem'])]
+   
+    private ?string $comment = null;
 
     public function getId(): ?int
     {
@@ -222,6 +238,18 @@ class Product
     public function setState(?string $state): static
     {
         $this->state = $state;
+
+        return $this;
+    }
+
+    public function getComment(): ?string
+    {
+        return $this->comment;
+    }
+
+    public function setComment(?string $comment): static
+    {
+        $this->comment = $comment;
 
         return $this;
     }

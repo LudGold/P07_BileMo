@@ -4,7 +4,7 @@ nelmio_api_doc:
         info:
             title: BileMo
             description: Your gateway to BileMo's luxury smartphone collection !
-            version: 1.0.0
+            version: 2.0.0
         paths:
             /api/login_check:
             /api/login:
@@ -15,43 +15,72 @@ nelmio_api_doc:
                     summary: Login user and obtain JWT token.
             /api/products:
                 get:
-                    tags: ['Bilemo Premium Phones']
+                    tags: ["Bilemo Premium Phones"]
                     summary: Get all Bilemo smartphones
+                    responses:
+                        "200":
+                            description: Returns all products
+                            content:
+                                application/vnd.bilemo.v1+json:
+                                    schema:
+                                        type: array
+                                        items:
+                                            $ref: "#/components/schemas/Product"
+                                application/vnd.bilemo.v2+json:
+                                    schema:
+                                        type: array
+                                        items:
+                                            $ref: "#/components/schemas/ProductV2"
             /api/products/{id}:
                 get:
-                    tags: ['Bilemo Premium Phones']
+                    tags: ["Bilemo Premium Phones"]
                     summary: Get a specific product by its ID
-           
+                    parameters:
+                        - in: path
+                          name: id
+                          required: true
+                          schema:
+                              type: integer
+                    responses:
+                        "200":
+                            description: Returns the details of a specific product
+                            content:
+                                application/vnd.bilemo.v1+json:
+                                    schema:
+                                        $ref: '#/components/schemas/Product'
+                                application/vnd.bilemo.v2+json:
+                                    schema:
+                                        $ref: '#/components/schemas/ProductV2'
             /api/customers:
                 get:
-                    tags: ['Client Administration']
+                    tags: ["Client Administration"]
                     summary: Retrieve all clients
-                    
+
                 post:
-                    tags: ['Client Administration']
+                    tags: ["Client Administration"]
                     summary: Add a new customer
-                    
+
             /api/customers/{id}:
                 get:
-                    tags: ['Client Administration']
+                    tags: ["Client Administration"]
                     summary: Retrieve a specific client by their ID
-                   
+
                 delete:
-                    tags: ['Client Administration']
+                    tags: ["Client Administration"]
                     summary: Delete a specific customer by his ID
                     requestBody:
                         description: Create a new JWT token
                         content:
                             application/json:
                                 schema:
-                                    $ref: '#/components/schemas/Credentials'
+                                    $ref: "#/components/schemas/Credentials"
                     responses:
-                        '200':
+                        "200":
                             description: Retrieve the JWT token
                             content:
                                 application/json:
                                     schema:
-                                        $ref: '#/components/schemas/Token'
+                                        $ref: "#/components/schemas/Token"
         components:
             schemas:
                 Token:
@@ -60,6 +89,39 @@ nelmio_api_doc:
                         token:
                             type: string
                             readOnly: true
+                Product:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                            example: 1
+                        name:
+                            type: string
+                            example: 'iPhone 18'
+                        description:
+                            type: string
+                            example: 'Latest model of iPhone with advanced features'
+                        brand:
+                            type: string
+                            example: 'Apple'
+                ProductV2:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                            example: 1
+                        name:
+                            type: string
+                            example: 'iPhone 18'
+                        description:
+                            type: string
+                            example: 'Latest model of iPhone with advanced features'
+                        brand:
+                            type: string
+                            example: 'Apple'
+                        comment:
+                            type: string
+                            example: 'Newly added field for version 2'
                 Credentials:
                     type: object
                     properties:
