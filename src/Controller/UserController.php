@@ -30,7 +30,7 @@ class UserController extends AbstractController
         Request $request,
         TagAwareCacheInterface $cache
     ): JsonResponse {
-         
+
         $user = $this->getUser();
 
         if (!$user instanceof User) {
@@ -40,15 +40,26 @@ class UserController extends AbstractController
         $page = $request->get('page', 1);
         $limit = $request->get('limit', 6);
         $cacheId = 'getCustomers_' . $page . 'limit' . $limit;
-        
+
         $customerList = $cache->get($cacheId, function (ItemInterface $item) use ($customerRepository, $user, $page, $limit) {
             $item->expiresAfter(3600);
             $item->tag('customerCache');
 
             return $customerRepository->findAllWithPagination($user, $page, $limit);
         });
+        // Update the context to pass the correct 'collection_operation_name'
+        $context = [
+            'groups' => 'customer:read',
+            'collection_operation_name' => 'get_customers', // Correct context for the normalizer
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total_items' => count($customerList),
+                'total_pages' => ceil(count($customerList) / $limit),
+            ]
+        ];
 
-        $jsonCustomerList = $serializer->serialize($customerList, 'json', ['groups' => 'customer:read', 'collection_operation_name' => true]);
+        $jsonCustomerList = $serializer->serialize($customerList, 'json', ['groups' => 'getCollection']);
 
         return new JsonResponse(
             $jsonCustomerList,
@@ -90,43 +101,43 @@ class UserController extends AbstractController
     }
 
     #[Route('/api/customers', name: 'add_customer', methods: ['POST'])]
-#[IsGranted('ROLE_USER')]
-public function addCustomer(
-    Request $request,
-    SerializerInterface $serializer,
-    EntityManagerInterface $entityManager,
-    ValidatorInterface $validator
-): JsonResponse {
-    // Vérifier que l'utilisateur est authentifié
-    $user = $this->getUser();
-    if (!$user) {
-        throw new BadRequestHttpException('User not authenticated');
+    #[IsGranted('ROLE_USER')]
+    public function addCustomer(
+        Request $request,
+        SerializerInterface $serializer,
+        EntityManagerInterface $entityManager,
+        ValidatorInterface $validator
+    ): JsonResponse {
+        // Vérifier que l'utilisateur est authentifié
+        $user = $this->getUser();
+        if (!$user) {
+            throw new BadRequestHttpException('User not authenticated');
+        }
+
+        // Désérialiser les données reçues en objet Customer
+        $customer = $serializer->deserialize($request->getContent(), Customer::class, 'json');
+
+        // Initialiser les attributs non fournis par le client
+        $customer->setCreatedAt(new \DateTimeImmutable());
+        $customer->setUser($user);
+
+        // Validation de l'entité
+        $errors = $validator->validate($customer);
+        if (count($errors) > 0) {
+            return new JsonResponse((string) $errors, Response::HTTP_BAD_REQUEST);
+        }
+
+        // Persister et enregistrer le Customer
+        $entityManager->persist($customer);
+        $entityManager->flush();
+
+        // Sérialiser et retourner la réponse
+        $jsonCustomer = $serializer->serialize($customer, 'json', [
+            'groups' => 'customer:read',
+            'item_operation_name' => true // Ajoutez cette clé pour activer le normalizer
+        ]);
+        return new JsonResponse($jsonCustomer, Response::HTTP_CREATED, [], true);
     }
-
-    // Désérialiser les données reçues en objet Customer
-    $customer = $serializer->deserialize($request->getContent(), Customer::class, 'json');
-    
-    // Initialiser les attributs non fournis par le client
-    $customer->setCreatedAt(new \DateTimeImmutable());
-    $customer->setUser($user);
-
-    // Validation de l'entité
-    $errors = $validator->validate($customer);
-    if (count($errors) > 0) {
-        return new JsonResponse((string) $errors, Response::HTTP_BAD_REQUEST);
-    }
-
-    // Persister et enregistrer le Customer
-    $entityManager->persist($customer);
-    $entityManager->flush();
-
-    // Sérialiser et retourner la réponse
-   $jsonCustomer = $serializer->serialize($customer, 'json', [
-    'groups' => 'customer:read',
-    'item_operation_name' => true // Ajoutez cette clé pour activer le normalizer
-]);
-    return new JsonResponse($jsonCustomer, Response::HTTP_CREATED, [], true);
-}
 
 
     #[Route('/api/customers/{id}', name: 'delete_customer', methods: ['DELETE'])]

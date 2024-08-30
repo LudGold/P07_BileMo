@@ -37,13 +37,10 @@ class ProductCollectionNormalizer implements NormalizerInterface
             'current_page' => $context['page'] ?? 1,
             'total_pages' => ceil(count($data) / ($context['limit'] ?? 10)),
         ];
-
-        // Ajouter des liens pour filtrer par marque, type, etc.
+        
         $data['_links'] = [
             'self' => $this->router->generate('get_products', [], UrlGeneratorInterface::ABSOLUTE_URL),
-            'by_brand' => $this->router->generate('get_products_by_brand', [], UrlGeneratorInterface::ABSOLUTE_URL),
-            'by_type' => $this->router->generate('get_products_by_type', [], UrlGeneratorInterface::ABSOLUTE_URL),
-            // Ajoutez d'autres liens si nécessaire
+            
         ];
 
         return $data;

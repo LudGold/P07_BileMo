@@ -41,14 +41,9 @@ services:
             $normalizer: '@serializer.normalizer.object'
             $router: '@router'
         tags: ['serializer.normalizer']
-    App\Serializer\CustomerItemNormalizer:
+    App\Serializer\CustomerNormalizer:
         arguments:
             $normalizer: '@serializer.normalizer.object'
             $router: '@router'
         tags: ['serializer.normalizer']
-    App\Serializer\CustomerCollectionNormalizer:
-        arguments:
-            $normalizer: '@serializer.normalizer.object'
-            $router: '@router'
-        tags:
-            - { name: 'serializer.normalizer', priority: 200 }
+    
