@@ -18,7 +18,7 @@ class CustomerNormalizer implements NormalizerInterface
         $this->router = $router;
     }
 
-    public function normalize(mixed $object, string $format = null, array $context = []): array
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array
     {
         if (is_iterable($object)) {
             // Gestion de la collection de customers
@@ -33,7 +33,7 @@ class CustomerNormalizer implements NormalizerInterface
                     'items_per_page' => $context['pagination']['limit'] ?? 10,
                     'total_items' => $context['pagination']['total_items'] ?? count($object),
                     'total_pages' => $context['pagination']['total_pages'] ?? 1,
-                ]
+                ],
             ];
 
             foreach ($object as $customer) {
@@ -53,7 +53,7 @@ class CustomerNormalizer implements NormalizerInterface
             // Gestion d'un seul customer (item)
             $data = $this->normalizer->normalize($object, $format, array_merge($context, ['groups' => ['customer:read']]));
 
-            
+
             $data['_links'] = [
                 'self' => $this->router->generate('get_customer', ['id' => $object->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
                 'add' => $this->router->generate('add_customer', [], UrlGeneratorInterface::ABSOLUTE_URL),
@@ -66,17 +66,17 @@ class CustomerNormalizer implements NormalizerInterface
         throw new \InvalidArgumentException('The object must be iterable or an instance of Customer');
     }
 
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
-       
-        return (is_iterable($data) && isset($context['collection_operation_name'])) ||
-            ($data instanceof Customer && (!isset($context['collection_operation_name']) || isset($context['item_operation_name'])));
+
+        return (is_iterable($data) && isset($context['collection_operation_name']))
+            || ($data instanceof Customer && (!isset($context['collection_operation_name']) || isset($context['item_operation_name'])));
     }
 
     public function getSupportedTypes(?string $format): array
     {
         return [
-            'iterable<' . Customer::class . '>' => true,
+            'iterable<'.Customer::class.'>' => true,
             Customer::class => true,
         ];
     }

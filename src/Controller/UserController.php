@@ -19,7 +19,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
-
 class UserController extends AbstractController
 {
     #[Route('/api/customers', name: 'get_customers', methods: ['GET'])]
@@ -28,7 +27,7 @@ class UserController extends AbstractController
         CustomerRepository $customerRepository,
         SerializerInterface $serializer,
         Request $request,
-        TagAwareCacheInterface $cache
+        TagAwareCacheInterface $cache,
     ): JsonResponse {
 
         $user = $this->getUser();
@@ -39,7 +38,7 @@ class UserController extends AbstractController
 
         $page = $request->get('page', 1);
         $limit = $request->get('limit', 6);
-        $cacheId = 'getCustomers_' . $page . 'limit' . $limit;
+        $cacheId = 'getCustomers_'.$page.'limit'.$limit;
 
         $customerList = $cache->get($cacheId, function (ItemInterface $item) use ($customerRepository, $user, $page, $limit) {
             $item->expiresAfter(3600);
@@ -56,7 +55,7 @@ class UserController extends AbstractController
                 'limit' => $limit,
                 'total_items' => count($customerList),
                 'total_pages' => ceil(count($customerList) / $limit),
-            ]
+            ],
         ];
 
         $jsonCustomerList = $serializer->serialize($customerList, 'json', ['groups' => 'getCollection']);
@@ -75,9 +74,9 @@ class UserController extends AbstractController
         int $id,
         CustomerRepository $customerRepository,
         SerializerInterface $serializer,
-        TagAwareCacheInterface $cache
+        TagAwareCacheInterface $cache,
     ): JsonResponse {
-        $cacheId = 'getCustomer_' . $id;
+        $cacheId = 'getCustomer_'.$id;
 
         $customer = $cache->get($cacheId, function (ItemInterface $item) use ($customerRepository, $id) {
             $item->expiresAfter(3600);
@@ -106,7 +105,7 @@ class UserController extends AbstractController
         Request $request,
         SerializerInterface $serializer,
         EntityManagerInterface $entityManager,
-        ValidatorInterface $validator
+        ValidatorInterface $validator,
     ): JsonResponse {
         // Vérifier que l'utilisateur est authentifié
         $user = $this->getUser();
@@ -134,11 +133,11 @@ class UserController extends AbstractController
         // Sérialiser et retourner la réponse
         $jsonCustomer = $serializer->serialize($customer, 'json', [
             'groups' => 'customer:read',
-            'item_operation_name' => true // Ajoutez cette clé pour activer le normalizer
+            'item_operation_name' => true, // Ajoutez cette clé pour activer le normalizer
         ]);
+
         return new JsonResponse($jsonCustomer, Response::HTTP_CREATED, [], true);
     }
-
 
     #[Route('/api/customers/{id}', name: 'delete_customer', methods: ['DELETE'])]
     #[IsGranted('ROLE_USER')]
@@ -146,7 +145,7 @@ class UserController extends AbstractController
         int $id,
         CustomerRepository $customerRepository,
         EntityManagerInterface $entityManager,
-        TagAwareCacheInterface $cache
+        TagAwareCacheInterface $cache,
     ): JsonResponse {
         $customer = $customerRepository->find($id);
 

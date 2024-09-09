@@ -10,7 +10,6 @@ use Symfony\Component\Serializer\Annotation\Groups;
 
 class Customer
 {
-
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -49,7 +48,7 @@ class Customer
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'customers')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(["customer:read"])]
+    #[Groups(['customer:read'])]
     private ?User $user = null;
 
     public function getId(): ?int

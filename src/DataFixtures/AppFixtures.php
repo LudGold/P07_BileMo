@@ -66,7 +66,7 @@ class AppFixtures extends Fixture
             $product->setCategory($faker->word);
             $product->setAvailableColors($faker->words(3));
             $product->setState($faker->word);
-            $product->setComment("commentaire pour version".$i);
+            $product->setComment('commentaire pour version'.$i);
             $manager->persist($product);
         }
 
