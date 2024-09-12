@@ -6,13 +6,27 @@ nelmio_api_doc:
             description: Your gateway to BileMo's luxury smartphone collection !
             version: 2.0.0
         paths:
-            /api/login_check:
             /api/login:
                 post:
                     operationId: loginUser
                     tags:
-                        - Authentication
-                    summary: Login user and obtain JWT token.
+                        - Authentification
+                    summary: Login user and obtain JWT token
+                    requestBody:
+                        required: true
+                        content:
+                            application/json:
+                                schema:
+                                    $ref: "#/components/schemas/Credentials"
+                    responses:
+                        "200":
+                            description: Returns the JWT token
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: "#/components/schemas/Token"
+                        "401":
+                            description: Invalid credentials
             /api/products:
                 get:
                     tags: ["Bilemo Premium Phones"]
@@ -47,40 +61,53 @@ nelmio_api_doc:
                             content:
                                 application/vnd.bilemo.v1+json:
                                     schema:
-                                        $ref: '#/components/schemas/Product'
+                                        $ref: "#/components/schemas/Product"
                                 application/vnd.bilemo.v2+json:
                                     schema:
-                                        $ref: '#/components/schemas/ProductV2'
+                                        $ref: "#/components/schemas/ProductV2"
             /api/customers:
                 get:
                     tags: ["Client Administration"]
                     summary: Retrieve all clients
-
                 post:
                     tags: ["Client Administration"]
                     summary: Add a new customer
-
+                    requestBody:
+                        required: true
+                        content:
+                            application/json:
+                                schema:
+                                    $ref: "#/components/schemas/Customer"
+                    responses:
+                        "201":
+                            description: Customer created
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: "#/components/schemas/Customer"
+                        "400":
+                            description: Invalid input data
             /api/customers/{id}:
                 get:
                     tags: ["Client Administration"]
                     summary: Retrieve a specific client by their ID
-
                 delete:
                     tags: ["Client Administration"]
-                    summary: Delete a specific customer by his ID
-                    requestBody:
-                        description: Create a new JWT token
-                        content:
-                            application/json:
-                                schema:
-                                    $ref: "#/components/schemas/Credentials"
+                    summary: Delete a specific customer by their ID
+                    parameters:
+                        - in: path
+                          name: id
+                          required: true
+                          schema:
+                            type: integer
+                            description: ID of the customer to delete
                     responses:
-                        "200":
-                            description: Retrieve the JWT token
-                            content:
-                                application/json:
-                                    schema:
-                                        $ref: "#/components/schemas/Token"
+                        "204":
+                            description: Customer deleted successfully, no content returned
+                        "404":
+                            description: Customer not found
+                        "403":
+                            description: Forbidden, the user is not allowed to delete this customer
         components:
             schemas:
                 Token:
@@ -89,21 +116,44 @@ nelmio_api_doc:
                         token:
                             type: string
                             readOnly: true
+                Customer:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                            readOnly: true
+                            example: 1
+                        name:
+                            type: string
+                            example: "Doe"
+                        firstName:
+                            type: string
+                            example: "John"
+                        email:
+                            type: string
+                            example: "johndoe@example.com"
+                        phoneNumber:
+                            type: string
+                            example: "+1234567890"
+                        address:
+                            type: string
+                            example: "123 Main St, Some City, Some Country"
                 Product:
                     type: object
                     properties:
                         id:
                             type: integer
+                            readOnly: true
                             example: 1
                         name:
                             type: string
-                            example: 'iPhone 18'
+                            example: "iPhone 18"
                         description:
                             type: string
-                            example: 'Latest model of iPhone with advanced features'
+                            example: "Latest model of iPhone with advanced features"
                         brand:
                             type: string
-                            example: 'Apple'
+                            example: "Apple"
                 ProductV2:
                     type: object
                     properties:
@@ -112,32 +162,34 @@ nelmio_api_doc:
                             example: 1
                         name:
                             type: string
-                            example: 'iPhone 18'
+                            example: "iPhone 18"
                         description:
                             type: string
-                            example: 'Latest model of iPhone with advanced features'
+                            example: "Latest model of iPhone with advanced features"
                         brand:
                             type: string
-                            example: 'Apple'
+                            example: "Apple"
                         comment:
                             type: string
-                            example: 'Newly added field for version 2'
+                            example: "Newly added field for version 2"
                 Credentials:
                     type: object
                     properties:
                         username:
                             type: string
-                            default: giles79@gmail.com
+                            default: "test@example.com"
                         password:
                             type: string
-                            default: password
+                            default: "password"
             securitySchemes:
                 bearerAuth:
-                    type: apiKey
-                    in: header
-                    name: Authorization # or another header name
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
         security:
             - bearerAuth: []
-    areas: # to filter documented areas
+    areas:
         path_patterns:
             - ^/api(?!/doc$) # Accepts routes under /api except /api/doc
+     
+     

@@ -46,19 +46,26 @@ class UserController extends AbstractController
 
             return $customerRepository->findAllWithPagination($user, $page, $limit);
         });
-        // Update the context to pass the correct 'collection_operation_name'
-        $context = [
-            'groups' => 'customer:read',
-            'collection_operation_name' => 'get_customers', // Correct context for the normalizer
-            'pagination' => [
-                'page' => $page,
-                'limit' => $limit,
-                'total_items' => count($customerList),
-                'total_pages' => ceil(count($customerList) / $limit),
-            ],
-        ];
+        
+    // Calcul du nombre total d'éléments pour la pagination
+    $totalItems = count($customerList);
+    $totalPages = ceil($totalItems / $limit);
 
-        $jsonCustomerList = $serializer->serialize($customerList, 'json', ['groups' => 'getCollection']);
+    // Contexte de sérialisation
+    $context = [
+        'groups' => ['customer:read'],
+        'collection_operation_name' => 'getCollection', 
+        'pagination' => [
+            'page' => $page,
+            'limit' => $limit,
+            'total_items' => $totalItems,
+            'total_pages' => $totalPages,
+        ],
+    ];
+
+    // Sérialisation des données
+    $jsonCustomerList = $serializer->serialize($customerList, 'json', $context);
+
 
         return new JsonResponse(
             $jsonCustomerList,
@@ -133,7 +140,7 @@ class UserController extends AbstractController
         // Sérialiser et retourner la réponse
         $jsonCustomer = $serializer->serialize($customer, 'json', [
             'groups' => 'customer:read',
-            'item_operation_name' => true, // Ajoutez cette clé pour activer le normalizer
+            'item_operation_name' => true, 
         ]);
 
         return new JsonResponse($jsonCustomer, Response::HTTP_CREATED, [], true);

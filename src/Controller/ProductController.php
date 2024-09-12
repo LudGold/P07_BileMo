@@ -61,17 +61,9 @@ class ProductController extends AbstractController
         TagAwareCacheInterface $cachePool,
     ): JsonResponse {
         // versionning api
-        $acceptHeader = $request->headers->get('Accept');
+        $version = $request->attributes->get('api_version');
 
-        if ('application/vnd.bilemo.v1+json' === $acceptHeader) {
-            $version = 'v1';
-        } elseif ('application/vnd.bilemo.v2+json' === $acceptHeader) {
-            $version = 'v2';
-        } else {
-            return new JsonResponse(['error' => 'Unsupported API version'], Response::HTTP_BAD_REQUEST);
-        }
-
-
+       //pagination
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('limit', 3);
         $page = max(1, $page);
@@ -118,17 +110,9 @@ class ProductController extends AbstractController
         TagAwareCacheInterface $cache,
         Request $request,
     ): JsonResponse {
-        // Vérification de l'en-tête "Accept" pour déterminer la version de l'API
-        $acceptHeader = $request->headers->get('Accept');
-
-        if ('application/vnd.bilemo.v1+json' === $acceptHeader) {
-            $version = 'v1';
-        } elseif ('application/vnd.bilemo.v2+json' === $acceptHeader) {
-            $version = 'v2';
-        } else {
-            return new JsonResponse(['error' => 'Unsupported API version'], Response::HTTP_BAD_REQUEST);
-        }
-
+        // Récupération de la version de l'API depuis les attributs de la requête
+        $version = $request->attributes->get('api_version');
+       
         $cacheId = 'getItem_'.$id.'_version_'.$version;
 
         $product = $cache->get($cacheId, function (ItemInterface $item) use ($productRepository, $id) {
