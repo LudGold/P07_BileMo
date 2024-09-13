@@ -10,7 +10,7 @@ nelmio_api_doc:
                 post:
                     operationId: loginUser
                     tags:
-                        - Authentification
+                        - Login Check
                     summary: Login user and obtain JWT token
                     requestBody:
                         required: true
@@ -31,20 +31,73 @@ nelmio_api_doc:
                 get:
                     tags: ["Bilemo Premium Phones"]
                     summary: Get all Bilemo smartphones
+                    parameters:
+                        - name: page
+                          in: query
+                          description: "La page que vous souhaitez récupérer"
+                          required: false
+                          schema:
+                              type: integer
+                              default: 1
+                        - name: limit
+                          in: query
+                          description: "Le nombre d'éléments à afficher par page"
+                          required: false
+                          schema:
+                              type: integer
+                              default: 10
                     responses:
                         "200":
                             description: Returns all products
                             content:
                                 application/vnd.bilemo.v1+json:
                                     schema:
-                                        type: array
-                                        items:
-                                            $ref: "#/components/schemas/Product"
+                                        type: object
+                                        properties:
+                                            data:
+                                                type: array
+                                                items:
+                                                    $ref: "#/components/schemas/Product"
+                                            pagination:
+                                                type: object
+                                                properties:
+                                                    total_items:
+                                                        type: integer
+                                                        example: 100
+                                                    current_page:
+                                                        type: integer
+                                                        example: 1
+                                                    total_pages:
+                                                        type: integer
+                                                        example: 10
+                                                    limit:
+                                                        type: integer
+                                                        example: 10
                                 application/vnd.bilemo.v2+json:
                                     schema:
-                                        type: array
-                                        items:
-                                            $ref: "#/components/schemas/ProductV2"
+                                        type: object
+                                        properties:
+                                            data:
+                                                type: array
+                                                items:
+                                                    $ref: "#/components/schemas/ProductV2"
+                                            pagination:
+                                                type: object
+                                                properties:
+                                                    total_items:
+                                                        type: integer
+                                                        example: 100
+                                                    current_page:
+                                                        type: integer
+                                                        example: 1
+                                                    total_pages:
+                                                        type: integer
+                                                        example: 10
+                                                    limit:
+                                                        type: integer
+                                                        example: 10
+                        "400":
+                            description: "Bad request, invalid pagination parameters"
             /api/products/{id}:
                 get:
                     tags: ["Bilemo Premium Phones"]
@@ -68,10 +121,10 @@ nelmio_api_doc:
             /api/customers:
                 get:
                     tags: ["Client Administration"]
-                    summary: Retrieve all clients
+                    summary: Retrieve all your clients
                 post:
                     tags: ["Client Administration"]
-                    summary: Add a new customer
+                    summary: Add a new client
                     requestBody:
                         required: true
                         content:
@@ -99,8 +152,8 @@ nelmio_api_doc:
                           name: id
                           required: true
                           schema:
-                            type: integer
-                            description: ID of the customer to delete
+                              type: integer
+                              description: ID of the customer to delete
                     responses:
                         "204":
                             description: Customer deleted successfully, no content returned
@@ -190,6 +243,4 @@ nelmio_api_doc:
             - bearerAuth: []
     areas:
         path_patterns:
-            - ^/api(?!/doc$) # Accepts routes under /api except /api/doc
-     
-     
+            - ^/api(?!/login_check$)(?!/doc$) # Accepts routes under /api except /api/doc

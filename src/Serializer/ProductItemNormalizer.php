@@ -26,13 +26,6 @@ class ProductItemNormalizer implements NormalizerInterface
 
         $data = $this->normalizer->normalize($object, $format, $context);
 
-        // Ajout de liens spécifiques pour le produit
-        $data['_links'] = [
-            'self' => $this->router->generate('get_item', ['id' => $object->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
-            'collection' => $this->router->generate('get_collection', [], UrlGeneratorInterface::ABSOLUTE_URL),
-
-        ];
-
         // Ajouter des attributs du produit
         $data['additional_info'] = [
             'description' => $object->getDescription(),
@@ -44,6 +37,12 @@ class ProductItemNormalizer implements NormalizerInterface
             'category' => $object->getCategory(),
             'available_colors' => $object->getAvailableColors(),
             'state' => $object->getState(),
+        ];
+        // Ajout de liens spécifiques pour le produit
+        $data['_links'] = [
+            'self' => $this->router->generate('get_item', ['id' => $object->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+            'collection' => $this->router->generate('get_collection', [], UrlGeneratorInterface::ABSOLUTE_URL),
+
         ];
 
         return $data;
