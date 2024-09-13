@@ -27,7 +27,6 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
-    # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 # Explicitly configure your service
     App\Security\JWTAuthenticator:
@@ -49,4 +48,8 @@ services:
             $normalizer: '@serializer.normalizer.object'
             $router: '@router'
         tags: ['serializer.normalizer']
+    App\Service\CacheService:
+        arguments:
+            $cachePool: '@cache.app.taggable'
+
     

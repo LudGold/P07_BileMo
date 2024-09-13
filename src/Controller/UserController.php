@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Customer;
 use App\Entity\User;
 use App\Repository\CustomerRepository;
+use App\Service\CacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,7 +28,7 @@ class UserController extends AbstractController
         CustomerRepository $customerRepository,
         SerializerInterface $serializer,
         Request $request,
-        TagAwareCacheInterface $cache,
+        CacheService $cacheService
     ): JsonResponse {
 
         $user = $this->getUser();
@@ -38,33 +39,33 @@ class UserController extends AbstractController
 
         $page = $request->get('page', 1);
         $limit = $request->get('limit', 6);
-        $cacheId = 'getCustomers_'.$page.'limit'.$limit;
+        $cacheId = 'getCustomers_' . $page . 'limit' . $limit;
 
-        $customerList = $cache->get($cacheId, function (ItemInterface $item) use ($customerRepository, $user, $page, $limit) {
-            $item->expiresAfter(3600);
-            $item->tag('customerCache');
-
+        // Utilisation du CacheService
+        $customerList = $cacheService->getCacheData($cacheId, function () use ($customerRepository, $user, $page, $limit) {
             return $customerRepository->findAllWithPagination($user, $page, $limit);
-        });
-        
-    // Calcul du nombre total d'éléments pour la pagination
-    $totalItems = count($customerList);
-    $totalPages = ceil($totalItems / $limit);
+        }, ['customerCache']);
 
-    // Contexte de sérialisation
-    $context = [
-        'groups' => ['customer:read'],
-        'collection_operation_name' => 'getCollection', 
-        'pagination' => [
-            'page' => $page,
-            'limit' => $limit,
-            'total_items' => $totalItems,
-            'total_pages' => $totalPages,
-        ],
-    ];
 
-    // Sérialisation des données
-    $jsonCustomerList = $serializer->serialize($customerList, 'json', $context);
+
+        // Calcul du nombre total d'éléments pour la pagination
+        $totalItems = count($customerList);
+        $totalPages = ceil($totalItems / $limit);
+
+        // Contexte de sérialisation
+        $context = [
+            'groups' => ['customer:read'],
+            'collection_operation_name' => 'getCollection',
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total_items' => $totalItems,
+                'total_pages' => $totalPages,
+            ],
+        ];
+
+        // Sérialisation des données
+        $jsonCustomerList = $serializer->serialize($customerList, 'json', $context);
 
 
         return new JsonResponse(
@@ -81,19 +82,22 @@ class UserController extends AbstractController
         int $id,
         CustomerRepository $customerRepository,
         SerializerInterface $serializer,
-        TagAwareCacheInterface $cache,
+        CacheService $cacheService
     ): JsonResponse {
-        $cacheId = 'getCustomer_'.$id;
+        $user = $this->getUser();
 
-        $customer = $cache->get($cacheId, function (ItemInterface $item) use ($customerRepository, $id) {
-            $item->expiresAfter(3600);
-            $item->tag('customerCache');
+        if (!$user instanceof User) {
+            throw new NotFoundHttpException('User not authenticated');
+        }
+        $cacheId = 'getCustomer_' . $id;
 
+        // Utilisation du CacheService
+        $customer = $cacheService->getCacheData($cacheId, function () use ($customerRepository, $id) {
             return $customerRepository->find($id);
-        });
+        }, ['customerCache']);
 
-        if (!$customer) {
-            throw new NotFoundHttpException('Customer not found');
+        if (!$customer || $customer->getUser()->getId() !== $user->getId()) {
+            throw new NotFoundHttpException('Customer not found or access denied');
         }
 
         $jsonCustomer = $serializer->serialize($customer, 'json', ['groups' => 'customer:read', 'item_operation_name' => true]);
@@ -140,7 +144,7 @@ class UserController extends AbstractController
         // Sérialiser et retourner la réponse
         $jsonCustomer = $serializer->serialize($customer, 'json', [
             'groups' => 'customer:read',
-            'item_operation_name' => true, 
+            'item_operation_name' => true,
         ]);
 
         return new JsonResponse($jsonCustomer, Response::HTTP_CREATED, [], true);
@@ -152,7 +156,7 @@ class UserController extends AbstractController
         int $id,
         CustomerRepository $customerRepository,
         EntityManagerInterface $entityManager,
-        TagAwareCacheInterface $cache,
+        CacheService $cacheService
     ): JsonResponse {
         $customer = $customerRepository->find($id);
 
@@ -162,7 +166,7 @@ class UserController extends AbstractController
         $entityManager->remove($customer);
         $entityManager->flush();
 
-        $cache->invalidateTags(['customerCache']);
+        $cacheService->invalidateCache(['customerCache']);
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }

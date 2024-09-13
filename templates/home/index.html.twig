@@ -1,13 +1,12 @@
 {% extends 'base.html.twig' %}
+
+{% block title %}BileMo{% endblock %}
+
 {% block body %}
-    <section>
-        <h1>BileMo</h1>
-        <p><strong>Votre Api Bilemo</strong></p>
-        <p> 
-            <a href="/api/doc">Voir la documentation</a>
-        </p>
-        <footer>
-            <p><em>BileMo - Ludivine Goldstein - 2024</em></p>
-        </footer>
-    </section>
+    <div class="container">
+        <h1>BileMo - Bienvenue dans l'interface  des téléphones mobiles haut de gamme</h1>
+        <h2>Explorez notre API - Documentation et ressources</h2>
+        <a href="{{ path('app.swagger_ui') }}" class="doc-button">Voir la documentation</a>
+        <p class="footer">BileMo - Ludivine Goldstein - 2024</p>
+    </div>
 {% endblock %}
