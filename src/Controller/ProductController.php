@@ -24,24 +24,33 @@ class ProductController extends AbstractController
      * @OA\Response(
      *     response=200,
      *     description="Retourne la liste complète des smartphones Bilemo",
+     *
      *     @OA\JsonContent(
      *        type="array",
+     *
      *     @Model(type=Product::class, groups={"getCollection"}))
      *     )
      * )
+     *
      * @OA\Parameter(
      *     name="page",
      *     in="query",
+     *
      *     @OA\Property(description="La page que l'on veut récupérer")
+     *
      *     @OA\Schema(type="integer")
      * )
+     *
      * @OA\Parameter(
      *     name="limit",
      *     in="query",
      *     description="Le nombre d'éléments que l'on veut récupérer",
+     *
      *     @OA\Schema(type="integer")
      * )
+     *
      * @OA\Tag(name="Products")
+     *
      * @Security(name="Bearer")
      */
     #[Route('/api/products', name: 'get_collection', methods: ['GET'])]
@@ -49,14 +58,18 @@ class ProductController extends AbstractController
         ProductRepository $productRepository,
         SerializerInterface $serializer,
         Request $request,
-        TagAwareCacheInterface $cachePool
+        TagAwareCacheInterface $cachePool,
     ): JsonResponse {
+        // versionning api
+        $version = $request->attributes->get('api_version');
+
+       //pagination
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('limit', 3);
         $page = max(1, $page);
         $limit = max(1, $limit);
 
-        $cacheId = 'getCollection_page_' . $page . '_limit_' . $limit;
+        $cacheId = 'getCollection_page_'.$page.'_limit_'.$limit.'_version_'.$version;
 
         $productList = $cachePool->get($cacheId, function (ItemInterface $item) use ($productRepository, $page, $limit) {
             $item->expiresAfter(3600);
@@ -64,7 +77,8 @@ class ProductController extends AbstractController
 
             return $productRepository->findAllWithPagination($page, $limit);
         });
-        $jsonProductList = $serializer->serialize($productList, 'json', ['groups' => 'getCollection']);
+        $serializationGroups = 'v1' === $version ? ['getCollection'] : ['getCollectionV2'];
+        $jsonProductList = $serializer->serialize($productList, 'json', ['groups' => $serializationGroups]);
 
         return new JsonResponse(
             $jsonProductList,
@@ -73,15 +87,19 @@ class ProductController extends AbstractController
             true
         );
     }
+
     /**
      * Récupérer un produit spécifique par son ID.
      *
      * @OA\Response(
      *     response=200,
      *     description="Retourne les détails d'un produit spécifique",
+     *
      *     @OA\JsonContent(ref=@Model(type=Product::class, groups={"getItem"}))
      * )
+     *
      * @OA\Tag(name="Products")
+     *
      * @Security(name="Bearer")
      */
     #[Route('/api/products/{id}', name: 'get_item', methods: ['GET'])]
@@ -89,9 +107,13 @@ class ProductController extends AbstractController
         int $id,
         SerializerInterface $serializer,
         ProductRepository $productRepository,
-        TagAwareCacheInterface $cache
+        TagAwareCacheInterface $cache,
+        Request $request,
     ): JsonResponse {
-        $cacheId = 'getItem_' . $id;
+        // Récupération de la version de l'API depuis les attributs de la requête
+        $version = $request->attributes->get('api_version');
+       
+        $cacheId = 'getItem_'.$id.'_version_'.$version;
 
         $product = $cache->get($cacheId, function (ItemInterface $item) use ($productRepository, $id) {
             $item->expiresAfter(3600);
@@ -104,9 +126,9 @@ class ProductController extends AbstractController
             throw new NotFoundHttpException('Product not found');
         }
 
-        $jsonProduct = $serializer->serialize($product, 'json', ['groups' => 'getItem', 'item_operation_name' => true]);
+        $serializationGroups = 'v1' === $version ? ['getItem'] : ['getItemV2'];
+        $jsonProduct = $serializer->serialize($product, 'json', ['groups' => $serializationGroups]);
 
         return new JsonResponse($jsonProduct, Response::HTTP_OK, [], true);
     }
-    
 }

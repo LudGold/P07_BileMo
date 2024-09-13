@@ -22,6 +22,15 @@ class AppFixtures extends Fixture
     public function load(ObjectManager $manager): void
     {
         $faker = Factory::create();
+        // Create a specific user for testing
+        $testUser = new User();
+        $testUser->setEmail('test@example.com'); // Email fixe pour les tests
+        $testUser->setRoles(['ROLE_USER']);
+
+        $hashedPassword = $this->passwordHasher->hashPassword($testUser, 'password'); 
+        $testUser->setPassword($hashedPassword);
+
+        $manager->persist($testUser);
 
         // Create users
         for ($i = 0; $i < 5; ++$i) {
@@ -66,7 +75,7 @@ class AppFixtures extends Fixture
             $product->setCategory($faker->word);
             $product->setAvailableColors($faker->words(3));
             $product->setState($faker->word);
-
+            $product->setComment('commentaire pour version' . $i);
             $manager->persist($product);
         }
 

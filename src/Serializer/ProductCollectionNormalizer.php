@@ -18,7 +18,7 @@ class ProductCollectionNormalizer implements NormalizerInterface
         $this->router = $router;
     }
 
-    public function normalize(mixed $object, string $format = null, array $context = []): array
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array
     {
         if (!is_iterable($object)) {
             throw new \InvalidArgumentException('The object must be iterable');
@@ -37,16 +37,16 @@ class ProductCollectionNormalizer implements NormalizerInterface
             'current_page' => $context['page'] ?? 1,
             'total_pages' => ceil(count($data) / ($context['limit'] ?? 10)),
         ];
-        
+
         $data['_links'] = [
             'self' => $this->router->generate('get_products', [], UrlGeneratorInterface::ABSOLUTE_URL),
-            
+
         ];
 
         return $data;
     }
 
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return is_iterable($data) && isset($context['collection_operation_name']);
     }
@@ -54,7 +54,7 @@ class ProductCollectionNormalizer implements NormalizerInterface
     public function getSupportedTypes(?string $format): array
     {
         return [
-            Product::class . '[]' => true,
+            Product::class.'[]' => true,
         ];
     }
 }

@@ -18,19 +18,19 @@ class ProductItemNormalizer implements NormalizerInterface
         $this->router = $router;
     }
 
-    public function normalize(mixed $object, string $format = null, array $context = []): array
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array
     {
         if (!$object instanceof Product) {
             throw new \InvalidArgumentException('The object must be an instance of Product');
         }
-       
+
         $data = $this->normalizer->normalize($object, $format, $context);
 
         // Ajout de liens spécifiques pour le produit
         $data['_links'] = [
             'self' => $this->router->generate('get_item', ['id' => $object->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
             'collection' => $this->router->generate('get_collection', [], UrlGeneratorInterface::ABSOLUTE_URL),
-            
+
         ];
 
         // Ajouter des attributs du produit
@@ -49,11 +49,12 @@ class ProductItemNormalizer implements NormalizerInterface
         return $data;
     }
 
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
-{
-    // Vérifie si l'objet est une instance de Product et si c'est une opération item
-    return $data instanceof Product && (!isset($context['collection_operation_name']) || isset($context['item_operation_name']));
-}
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
+    {
+        // Vérifie si l'objet est une instance de Product et si c'est une opération item
+        return $data instanceof Product && (!isset($context['collection_operation_name']) || isset($context['item_operation_name']));
+    }
+
     public function getSupportedTypes(?string $format): array
     {
         return [
