@@ -163,6 +163,18 @@ class UserController extends AbstractController
         if (!$customer) {
             throw new NotFoundHttpException('Customer not found');
         }
+        $user = $this->getUser();
+
+    // Vérifier que le customer appartient bien à l'utilisateur connecté
+    if (!$user instanceof User) {
+        throw new NotFoundHttpException('User not authenticated');
+    }
+    if ($customer->getUser()->getId() !== $user->getId()) {
+        return new JsonResponse([
+            'error' => 'You do not have permission to delete this customer.'
+        ], Response::HTTP_FORBIDDEN);
+    }
+    
         $entityManager->remove($customer);
         $entityManager->flush();
 
