@@ -16,13 +16,13 @@
   php bin/console d:m:m
   php bin/console d:f:l
 
-4. **Documentation API :**
+3. **Documentation API :**
    
    La documentation faite avec Nelmio sera accessible soit par la home page : https://127.0.0.1:8000 et un lien à cliquer
    soit directement à l'adresse suivante:
    https://127.0.0.1:8000/api/doc
 
-6. **Tester l'API :**
+4. **Tester l'API :**
    With Postman or the Nelmio documentation
 
 
