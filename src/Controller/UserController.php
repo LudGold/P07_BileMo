@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Customer;
 use App\Entity\User;
 use App\Repository\CustomerRepository;
+use App\Serializer\CustomerNormalizer;
 use App\Service\CacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -13,12 +14,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Contracts\Cache\ItemInterface;
-use Symfony\Contracts\Cache\TagAwareCacheInterface;
+
 
 class UserController extends AbstractController
 {
@@ -26,7 +27,7 @@ class UserController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function getCustomers(
         CustomerRepository $customerRepository,
-        SerializerInterface $serializer,
+        CustomerNormalizer $customerNormalizer,
         Request $request,
         CacheService $cacheService
     ): JsonResponse {
@@ -37,20 +38,18 @@ class UserController extends AbstractController
             throw new NotFoundHttpException('User not authenticated');
         }
 
-        $page = $request->get('page', 1);
-        $limit = $request->get('limit', 6);
-        $cacheId = 'getCustomers_' . $page . 'limit' . $limit;
+        $page = max(1, $request->get('page', 1));
+        $limit = max(1, $request->get('limit', 6));
+        $cacheId = 'getCustomers_user' . $user->getId() . '_page' . $page . '_limit' . $limit;
+
+        // Calcul du nombre total d'éléments pour la pagination
+        $totalItems = $customerRepository->count(['user' => $user]); // Nombre total de clients
+        $totalPages = $totalItems > 0 ? ceil($totalItems / $limit) : 1;
 
         // Utilisation du CacheService
         $customerList = $cacheService->getCacheData($cacheId, function () use ($customerRepository, $user, $page, $limit) {
             return $customerRepository->findAllWithPagination($user, $page, $limit);
         }, ['customerCache']);
-
-
-
-        // Calcul du nombre total d'éléments pour la pagination
-        $totalItems = count($customerList);
-        $totalPages = ceil($totalItems / $limit);
 
         // Contexte de sérialisation
         $context = [
@@ -64,17 +63,18 @@ class UserController extends AbstractController
             ],
         ];
 
-        // Sérialisation des données
-        $jsonCustomerList = $serializer->serialize($customerList, 'json', $context);
-
-
+        // Utilisation du normalizer directement
+        $jsonCustomerList = $customerNormalizer->normalize($customerList, null, $context);
+        // Convertir les données normalisées en JSON
+        $jsonData = json_encode($jsonCustomerList);
         return new JsonResponse(
-            $jsonCustomerList,
+            $jsonData,
             Response::HTTP_OK,
             [],
             true
         );
     }
+
 
     #[Route('/api/customers/{id}', name: 'get_customer', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
@@ -97,7 +97,7 @@ class UserController extends AbstractController
         }, ['customerCache']);
 
         if (!$customer || $customer->getUser()->getId() !== $user->getId()) {
-            throw new NotFoundHttpException('Customer not found or access denied');
+            throw new AccessDeniedHttpException('Customer not found or access denied');
         }
 
         $jsonCustomer = $serializer->serialize($customer, 'json', ['groups' => 'customer:read', 'item_operation_name' => true]);
@@ -117,10 +117,11 @@ class UserController extends AbstractController
         SerializerInterface $serializer,
         EntityManagerInterface $entityManager,
         ValidatorInterface $validator,
+        CacheService $cacheService,
     ): JsonResponse {
         // Vérifier que l'utilisateur est authentifié
         $user = $this->getUser();
-        if (!$user) {
+        if (!$user instanceof User) {
             throw new BadRequestHttpException('User not authenticated');
         }
 
@@ -140,6 +141,7 @@ class UserController extends AbstractController
         // Persister et enregistrer le Customer
         $entityManager->persist($customer);
         $entityManager->flush();
+        $cacheService->invalidateCache(['customerCache_user' . $user->getId()]);
 
         // Sérialiser et retourner la réponse
         $jsonCustomer = $serializer->serialize($customer, 'json', [
@@ -165,16 +167,16 @@ class UserController extends AbstractController
         }
         $user = $this->getUser();
 
-    // Vérifier que le customer appartient bien à l'utilisateur connecté
-    if (!$user instanceof User) {
-        throw new NotFoundHttpException('User not authenticated');
-    }
-    if ($customer->getUser()->getId() !== $user->getId()) {
-        return new JsonResponse([
-            'error' => 'You do not have permission to delete this customer.'
-        ], Response::HTTP_FORBIDDEN);
-    }
-    
+        // Vérifie que le customer appartient bien à l'utilisateur connecté
+        if (!$user instanceof User) {
+            throw new NotFoundHttpException('User not authenticated');
+        }
+        if ($customer->getUser()->getId() !== $user->getId()) {
+            return new JsonResponse([
+                'error' => 'You do not have permission to delete this customer.'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $entityManager->remove($customer);
         $entityManager->flush();
 

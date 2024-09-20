@@ -44,7 +44,7 @@ class AppFixtures extends Fixture
             $manager->persist($user);
 
             // Create customers linked to the user
-            for ($j = 0; $j < 3; ++$j) {
+            for ($j = 0; $j < 20; ++$j) {
                 $customer = new Customer();
                 $customer->setName($faker->lastName);
                 $customer->setFirstName($faker->firstName);

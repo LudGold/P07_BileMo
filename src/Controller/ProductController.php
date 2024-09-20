@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Repository\ProductRepository;
+use App\Serializer\ProductCollectionNormalizer;
+use App\Serializer\ProductItemNormalizer;
 use App\Service\CacheService;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use Nelmio\ApiDocBundle\Annotation\Security;
@@ -46,7 +48,7 @@ class ProductController extends AbstractController
     #[Route('/api/products', name: 'get_collection', methods: ['GET'])]
     public function getCollection(
         ProductRepository $productRepository,
-        SerializerInterface $serializer,
+        ProductCollectionNormalizer $ProductCollectionNormalizer,
         Request $request,
         CacheService $cacheService
     ): JsonResponse {
@@ -55,12 +57,16 @@ class ProductController extends AbstractController
 
         // Pagination
         $page = $request->query->getInt('page', 1);
-        $limit = $request->query->getInt('limit', 3);
+        $limit = $request->query->getInt('limit', 2);
         $page = max(1, $page);
         $limit = max(1, $limit);
 
+        // Calcul du nombre total d'éléments
+        $totalItems = $productRepository->count([]);
+        $totalPages = ceil($totalItems / $limit);
+
         // Générer un cacheId unique pour la requête
-        $cacheId = 'getCollection_page_'.$page.'_limit_'.$limit.'_version_'.$version;
+        $cacheId = 'getCollection_page_' . $page . '_limit_' . $limit . '_version_' . $version;
 
         // Utilisation du service de cache
         $productList = $cacheService->getCacheData($cacheId, function () use ($productRepository, $page, $limit) {
@@ -69,10 +75,26 @@ class ProductController extends AbstractController
 
         // Détermination des groupes de sérialisation en fonction de la version de l'API
         $serializationGroups = 'v1' === $version ? ['getCollection'] : ['getCollectionV2'];
-        $jsonProductList = $serializer->serialize($productList, 'json', ['groups' => $serializationGroups]);
 
-        return new JsonResponse($jsonProductList, Response::HTTP_OK, [], true);
+        // Contexte de sérialisation avec les informations de pagination
+        $context = [
+            'groups' => $serializationGroups,
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total_items' => $totalItems,
+                'total_pages' => $totalPages,
+            ],
+            'collection_operation_name' => 'getCollection',
+        ];
+
+        // Sérialisation avec le contexte de pagination complet
+        $jsonProductList = $ProductCollectionNormalizer->normalize($productList, 'json', $context);
+        // Convertir les données normalisées en JSON
+        $jsonData = json_encode($jsonProductList);
+        return new JsonResponse($jsonData, Response::HTTP_OK, [], true);
     }
+
 
     /**
      * Récupérer un produit spécifique par son ID.
@@ -88,7 +110,7 @@ class ProductController extends AbstractController
     #[Route('/api/products/{id}', name: 'get_item', methods: ['GET'])]
     public function getItem(
         int $id,
-        SerializerInterface $serializer,
+        ProductItemNormalizer $productItemNormalizer,
         ProductRepository $productRepository,
         CacheService $cacheService,
         Request $request
@@ -97,7 +119,7 @@ class ProductController extends AbstractController
         $version = $request->attributes->get('api_version');
 
         // Générer un cacheId unique pour la requête
-        $cacheId = 'getItem_'.$id.'_version_'.$version;
+        $cacheId = 'getItem_' . $id . '_version_' . $version;
 
         // Utilisation du service de cache
         $product = $cacheService->getCacheData($cacheId, function () use ($productRepository, $id) {
@@ -110,8 +132,9 @@ class ProductController extends AbstractController
 
         // Détermination des groupes de sérialisation en fonction de la version de l'API
         $serializationGroups = 'v1' === $version ? ['getItem'] : ['getItemV2'];
-        $jsonProduct = $serializer->serialize($product, 'json', ['groups' => $serializationGroups]);
-
-        return new JsonResponse($jsonProduct, Response::HTTP_OK, [], true);
+        $jsonProduct = $productItemNormalizer->normalize($product, 'json', ['groups' => $serializationGroups]);
+        // Convertir en JSON
+        $jsonData = json_encode($jsonProduct);
+        return new JsonResponse($jsonData, Response::HTTP_OK, [], true);
     }
 }
