@@ -10,8 +10,7 @@
 
      PHP 8.2.0 PHPMyAdmin 5.2.0 MySQL 8.0.31 - Port 3306 Composer
      Database : You need the following datas to match the database configuration : create ``.env.local`` file on project's root directory, copy and paste into it the content of ``.env`` file configurate the field 
-    ``database_url ``  
-     settings
+    ``database_url `` settings
    
      Then execute the following commands :
 
@@ -21,8 +20,8 @@
 
 3. **Documentation API :**
    
-  The documentation created with Nelmio will be accessible either through the home page: https://127.0.0.1:8000 by clicking on the "view documentation" link, or directly at the following address:
-   https://127.0.0.1:8000/api/doc
+  The documentation created with Nelmio will be accessible either through the [home page](https://127.0.0.1:8000) by clicking on the "view documentation" link, or directly at the following address:
+   [https://127.0.0.1:8000/api/doc](https://127.0.0.1:8000/api/doc)
    To access the various API routes, you must first obtain a JWT token by sending a POST request to the endpoint /api/login_check with the authentication details (username and password).
 
    The endpoint will return a JWT token that you need to include in the Authorization headers of your requests.
