@@ -21,18 +21,38 @@ class CustomerNormalizer implements NormalizerInterface
     public function normalize(mixed $object, ?string $format = null, array $context = []): array
     {
         if (is_iterable($object)) {
+            // Récupérer les informations de pagination du contexte
+            $currentPage = $context['pagination']['page'] ?? 1;
+            $itemsPerPage = $context['pagination']['limit'] ?? 10;
+            $totalItems = $context['pagination']['total_items'] ?? count($object);
+            $totalPages = $context['pagination']['total_pages'] ?? 1;
             // Gestion de la collection de customers
             $data = [
                 'items' => [],
                 '_links' => [
-                    'self' => $this->router->generate('get_customers', [], UrlGeneratorInterface::ABSOLUTE_URL),
+                    'self' => $this->router->generate('get_customers', [
+                        'page' => $currentPage,
+                        'limit' => $itemsPerPage
+                    ], UrlGeneratorInterface::ABSOLUTE_URL),
                     'add' => $this->router->generate('add_customer', [], UrlGeneratorInterface::ABSOLUTE_URL),
                 ],
                 'pagination' => [
-                    'current_page' => $context['pagination']['page'] ?? 1,
-                    'items_per_page' => $context['pagination']['limit'] ?? 10,
-                    'total_items' => $context['pagination']['total_items'] ?? count($object),
-                    'total_pages' => $context['pagination']['total_pages'] ?? 1,
+                    'current_page' => $currentPage,
+                    'items_per_page' => $itemsPerPage,
+                    'total_items' => $totalItems,
+                    'total_pages' => $totalPages,
+                    'prev' => $currentPage > 1
+                        ? $this->router->generate('get_customers', [
+                            'page' => $currentPage - 1,
+                            'limit' => $itemsPerPage
+                        ], UrlGeneratorInterface::ABSOLUTE_URL)
+                        : '',
+                    'next' => $currentPage < $totalPages
+                        ? $this->router->generate('get_customers', [
+                            'page' => $currentPage + 1,
+                            'limit' => $itemsPerPage
+                        ], UrlGeneratorInterface::ABSOLUTE_URL)
+                        : null,
                 ],
             ];
 
@@ -76,7 +96,7 @@ class CustomerNormalizer implements NormalizerInterface
     public function getSupportedTypes(?string $format): array
     {
         return [
-            'iterable<'.Customer::class.'>' => true,
+            'iterable<' . Customer::class . '>' => true,
             Customer::class => true,
         ];
     }

@@ -7,7 +7,7 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class ApiVersionListener
 {
-    public function onKernelRequest(RequestEvent $event)
+    public function onKernelRequest(RequestEvent $event):void
     {
         $request = $event->getRequest();
         

@@ -25,57 +25,57 @@ class Product
 
 
     #[ORM\Column(length: 255)]
-    #[Groups(['getCollection', 'getItem'])]
+    #[Groups(['getCollection', 'getItem', 'getCollectionV2', 'getItemV2'])]
     private ?string $description = null;
 
 
     #[ORM\Column(length: 255)]
-    #[Groups(['getCollection', 'getItem'])]
+    #[Groups(['getCollection', 'getItem', 'getCollectionV2', 'getItemV2'])]
     private ?string $brand = null;
 
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
-    #[Groups(['getCollection', 'getItem'])]
+    #[Groups(['getCollection', 'getItem', 'getCollectionV2', 'getItemV2'])]
     private ?string $model = null;
 
 
     #[ORM\Column]
-    #[Groups(['getCollection', 'getItem'])]
+    #[Groups(['getCollection', 'getItem', 'getCollectionV2', 'getItemV2'])]
     private ?int $price = null;
 
 
     #[ORM\Column]
-    #[Groups(['getCollection', 'getItem'])]
+    #[Groups(['getCollection', 'getItem', 'getCollectionV2', 'getItemV2'])]
     private ?int $stock = null;
 
 
     #[ORM\Column(type: 'datetime')]
-    #[Groups(['getCollection', 'getItem'])]
+    #[Groups(['getCollection', 'getItem', 'getCollectionV2', 'getItemV2'])]
     private ?\DateTimeInterface $dateAdded = null;
 
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['getCollection', 'getItem'])]
+    #[Groups(['getCollection', 'getItem', 'getCollectionV2', 'getItemV2'])]
     private ?array $technicalSpecs = null;
 
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['getCollection', 'getItem'])]
+    #[Groups(['getCollection', 'getItem', 'getCollectionV2', 'getItemV2'])]
     private ?array $images = null;
 
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['getCollection', 'getItem'])]
+    #[Groups(['getCollection', 'getItem', 'getCollectionV2', 'getItemV2'])]
     private ?string $category = null;
 
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['getCollection', 'getItem'])]
+    #[Groups(['getCollection', 'getItem', 'getCollectionV2', 'getItemV2'])]
     private ?array $availableColors = null;
 
 
     #[ORM\Column(length: 50, nullable: true)]
-    #[Groups(['getCollection', 'getItem'])]
+    #[Groups(['getCollection', 'getItem', 'getCollectionV2', 'getItemV2'])]
     private ?string $state = null;
 
     // Propriétés spécifiques à la version 2
