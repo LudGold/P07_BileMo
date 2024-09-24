@@ -75,7 +75,25 @@ class UserController extends AbstractController
 
         // Normalise la liste des clients en un tableau associatif
         $jsonCustomerList = $customerNormalizer->normalize($customerList, null, $context);
-
+        // Ajoute un message si la liste des clients est vide
+        if (empty($jsonCustomerList) || !isset($jsonCustomerList['items']) || empty($jsonCustomerList['items'])) {
+            $jsonCustomerList = [
+                'items' => [],
+                'message' => 'No customers found for this user.',
+                'links' => [
+                    'self' => $request->getUri(), // URL de la requête actuelle
+                    'add' => $this->generateUrl('add_customer') // URL pour ajouter un nouveau client, vous pouvez remplacer par votre route
+                ],
+                'pagination' => [
+                    'page' => $page,
+                    'items_per_page' => $limit,
+                    'total_items' => $totalItems,
+                    'total_pages' => $totalPages,
+                    'prev' => $page > 1 ? $this->generateUrl('get_customers', ['page' => $page - 1, 'limit' => $limit]) : null,
+                    'next' => $page < $totalPages ? $this->generateUrl('get_customers', ['page' => $page + 1, 'limit' => $limit]) : null,
+                ]
+            ];
+        }
         // Convertit les données normalisées en JSON
         $jsonData = json_encode($jsonCustomerList);
 

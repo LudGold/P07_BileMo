@@ -122,6 +122,50 @@ nelmio_api_doc:
                 get:
                     tags: ["Client Administration"]
                     summary: Retrieve all your clients
+                    parameters:
+                        - name: page
+                          in: query
+                          description: "La page que vous souhaitez récupérer"
+                          required: false
+                          schema:
+                              type: integer
+                              default: 1
+                        - name: limit
+                          in: query
+                          description: "Le nombre d'éléments à afficher par page"
+                          required: false
+                          schema:
+                              type: integer
+                              default: 6
+                    responses:
+                        "200":
+                            description: Returns all customers for the authenticated user
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            items:
+                                                type: array
+                                                items:
+                                                    $ref: "#/components/schemas/Customer"
+                                            pagination:
+                                                type: object
+                                                properties:
+                                                    total_items:
+                                                        type: integer
+                                                        example: 0
+                                                    current_page:
+                                                        type: integer
+                                                        example: 1
+                                                    total_pages:
+                                                        type: integer
+                                                        example: 1
+                                                    limit:
+                                                        type: integer
+                                                        example: 6
+                        "400":
+                            description: Invalid pagination parameters
                 post:
                     tags: ["Client Administration"]
                     summary: Add a new client
